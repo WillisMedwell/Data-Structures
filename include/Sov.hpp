@@ -1,6 +1,7 @@
 #pragma once
 // Structure of vectors implementation
 
+#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <span>
@@ -10,16 +11,16 @@
 template <typename... Types>
 class Sov {
 public:
-    using TypesRefs = typename std::tuple<Types&...>;
-    using TypesValues = typename std::tuple<Types...>;
-    using TypesBegin = typename std::tuple<Types*...>;
-    constexpr static size_t num_types = std::tuple_size<TypesValues>();
-    constexpr static size_t bytes_per_entry = sizeof(TypesValues);
-
-    size_t entry_capacity = 0;
-    size_t entry_count = 0;
-    std::unique_ptr<uint8_t[]> data;
-    TypesBegin beginnings;
+    template <size_t index = 0, typename Tuple, typename T, class Pred>
+    constexpr static auto accumulateTuple(Tuple& tuple, T& init, Pred predicate)
+    {
+        if constexpr (index == std::tuple_size<Tuple>()) {
+            return init;
+        } else {
+            auto& element = std::get<index>(tuple);
+            return accumulateTuple<index + 1>(tuple, predicate(init, element), predicate);
+        }
+    }
 
     template <size_t index = 0, typename Tuple, class Pred>
     constexpr static void forEachTuple(Tuple& tuple, Pred predicate)
@@ -33,13 +34,26 @@ public:
         }
     }
 
+    using TypesRefs = typename std::tuple<Types&...>;
+    using TypesValues = typename std::tuple<Types...>;
+    using TypesBegin = typename std::tuple<Types*...>;
+    constexpr static size_t num_types = std::tuple_size<TypesValues>();
+
+    constexpr static size_t bytes_per_entry = sizeof(TypesValues);
+
+    size_t entry_capacity = 0;
+    size_t entry_count = 0;
+    std::unique_ptr<uint8_t[]> data;
+    TypesBegin beginnings;
+
     template <size_t index = 0>
     constexpr static void pushTuple(TypesBegin& dest, const TypesValues& source, const size_t i)
     {
         if constexpr (index == num_types) {
             return;
         } else {
-            std::get<index>(dest)[i] = std::get<index>(source);
+            using ElementType = std::remove_reference_t<decltype(std::get<index>(source))>;
+            new (std::get<index>(dest) + i)(ElementType)(std::get<index>(source));
             return pushTuple<index + 1>(dest, source, i);
         }
     }
@@ -47,6 +61,7 @@ public:
     template <size_t index = 0, typename T>
     constexpr static auto getElement(TypesBegin& source, const size_t i, T zipped_element)
     {
+
         if constexpr (index == num_types) {
             // return the completed zip.
             return zipped_element;
@@ -61,15 +76,26 @@ public:
     Sov(size_t init_capacity = 20)
         : entry_capacity(init_capacity)
         , entry_count(0)
-        , data(std::make_unique<uint8_t[]>(bytes_per_entry * entry_capacity))
+        , data(std::make_unique<uint8_t[]>(bytes_per_entry * entry_capacity + 100)) // add memory alignment padding...
     {
         uint8_t* ptr = data.get();
 
         auto assign_beginning = [&](auto& begin) {
-            begin = reinterpret_cast<decltype(begin)>(ptr);
-            ptr += sizeof(decltype(*begin)) * entry_capacity;
+            using Ptr = decltype(begin);
+            using Value = decltype(*begin);
+
+            // in case of memory alignment issues.
+            size_t alignment = alignof(Value);
+            std::uintptr_t address = reinterpret_cast<std::uintptr_t>(ptr);
+            while (address % alignment) {
+                ++ptr;
+                address = reinterpret_cast<std::uintptr_t>(ptr);
+            }
+            begin = reinterpret_cast<Ptr>(ptr);
+            ptr += sizeof(Value) * entry_capacity;
         };
         forEachTuple(beginnings, assign_beginning);
+        assert(reinterpret_cast<std::uintptr_t>(ptr) <= reinterpret_cast<std::uintptr_t>(data.get()) + (entry_capacity * bytes_per_entry));
     }
 
     auto pushBack(Types... value) -> void
