@@ -1,9 +1,12 @@
 #pragma once
 // Structure of vectors implementation
 
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <numeric>
 #include <span>
 #include <stdexcept>
 #include <tuple>
@@ -11,6 +14,19 @@
 template <typename... Types>
 class Sov {
 public:
+    using FieldsRef = typename std::tuple<Types&...>;
+    using FieldsValue = typename std::tuple<Types...>;
+    using FieldsPtr = typename std::tuple<Types*...>;
+    constexpr static size_t num_types = std::tuple_size<FieldsValue>();
+
+    constexpr static size_t bytes_per_entry = sizeof(FieldsValue);
+
+    size_t entry_capacity = 0;
+    size_t entry_count = 0;
+    std::unique_ptr<uint8_t[]> data;
+    FieldsPtr beginnings;
+
+private: // tuple iteration helpers
     template <size_t index = 0, typename Tuple, typename T, class Pred>
     constexpr static auto accumulateTuple(Tuple& tuple, T& init, Pred predicate)
     {
@@ -34,34 +50,21 @@ public:
         }
     }
 
-    using TypesRefs = typename std::tuple<Types&...>;
-    using TypesValues = typename std::tuple<Types...>;
-    using TypesBegin = typename std::tuple<Types*...>;
-    constexpr static size_t num_types = std::tuple_size<TypesValues>();
-
-    constexpr static size_t bytes_per_entry = sizeof(TypesValues);
-
-    size_t entry_capacity = 0;
-    size_t entry_count = 0;
-    std::unique_ptr<uint8_t[]> data;
-    TypesBegin beginnings;
-
     template <size_t index = 0>
-    constexpr static void pushTuple(TypesBegin& dest, const TypesValues& source, const size_t i)
+    constexpr static void pushTuple(FieldsPtr& destination, const FieldsValue& source, const size_t i)
     {
         if constexpr (index == num_types) {
             return;
         } else {
             using ElementType = std::remove_reference_t<decltype(std::get<index>(source))>;
-            new (std::get<index>(dest) + i)(ElementType)(std::get<index>(source));
-            return pushTuple<index + 1>(dest, source, i);
+            new (std::get<index>(destination) + i)(ElementType)(std::get<index>(source));
+            return pushTuple<index + 1>(destination, source, i);
         }
     }
 
     template <size_t index = 0, typename T>
-    constexpr static auto getElement(TypesBegin& source, const size_t i, T zipped_element)
+    constexpr static auto getElement(FieldsPtr& source, const size_t i, T zipped_element)
     {
-
         if constexpr (index == num_types) {
             // return the completed zip.
             return zipped_element;
@@ -73,37 +76,88 @@ public:
         }
     }
 
-    Sov(size_t init_capacity = 20)
-        : entry_capacity(init_capacity)
-        , entry_count(0)
-        , data(std::make_unique<uint8_t[]>(bytes_per_entry * entry_capacity + 100)) // add memory alignment padding...
+    template <size_t index = 0>
+    constexpr static void copyFields(FieldsPtr& destination, FieldsPtr& source, size_t count)
     {
-        uint8_t* ptr = data.get();
+        if constexpr (index == num_types) {
+            return;
+        } else {
+            auto src = std::span { std::get<index>(source), count };
+            auto dest = std::span { std::get<index>(destination), count };
+            std::ranges::copy(src, dest.begin());
+            return copyFields<index + 1>(destination, source, count);
+        }
+    }
 
-        auto assign_beginning = [&](auto& begin) {
-            using Ptr = decltype(begin);
-            using Value = decltype(*begin);
-
-            // in case of memory alignment issues.
-            size_t alignment = alignof(Value);
-            std::uintptr_t address = reinterpret_cast<std::uintptr_t>(ptr);
-            while (address % alignment) {
-                ++ptr;
-                address = reinterpret_cast<std::uintptr_t>(ptr);
-            }
-            begin = reinterpret_cast<Ptr>(ptr);
-            ptr += sizeof(Value) * entry_capacity;
-        };
-        forEachTuple(beginnings, assign_beginning);
-        assert(reinterpret_cast<std::uintptr_t>(ptr) <= reinterpret_cast<std::uintptr_t>(data.get()) + (entry_capacity * bytes_per_entry));
+public:
+    Sov(size_t init_capacity = 20)
+        : entry_capacity(0)
+        , entry_count(0)
+        , data(nullptr)
+        , beginnings({})
+    {
+        grow(init_capacity);
+    }
+    Sov(const Sov& other)
+        : entry_capacity(0)
+        , entry_count(0)
+        , data(nullptr)
+        , beginnings({})
+    {
+        grow(other.entry_capacity);
+        copyFields(beginnings, other.beginnings, other.entry_count);
+    }
+    Sov(Sov&& other)
+        : entry_capacity(0)
+        , entry_count(0)
+        , data(nullptr)
+        , beginnings({})
+    {
+        entry_capacity = other.entry_capacity;
+        entry_count = other.entry_count;
+        data = std::move(other.data);
+        beginnings = other.beginnings;
     }
 
     auto pushBack(Types... value) -> void
     {
         if (entry_count == entry_capacity) {
-            throw std::runtime_error("Expansion not implemented");
+            grow(entry_capacity * 2);
         }
-        pushTuple(beginnings, TypesValues(value...), entry_count++);
+        pushTuple(beginnings, FieldsValue(value...), entry_count++);
+    }
+
+    auto popBack() -> void
+    {
+        entry_count = std::min(--entry_count, size_t(0));
+    }
+
+    auto grow(size_t new_entry_capacity)
+    {
+        assert(new_entry_capacity > entry_capacity);
+        auto new_data = std::make_unique<uint8_t[]>(bytes_per_entry * new_entry_capacity + 64);
+        auto ptr = new_data.get();
+        FieldsPtr new_beginnings;
+
+        auto assign_beginning = [&ptr, &new_entry_capacity](auto& begin) {
+            using Ptr = decltype(begin);
+            using Value = decltype(*begin);
+            // ensure proper memory alignment
+            while (reinterpret_cast<std::uintptr_t>(ptr) % alignof(Value)) {
+                ++ptr;
+            }
+            begin = reinterpret_cast<Ptr>(ptr);
+            ptr += sizeof(Value) * new_entry_capacity;
+        };
+        forEachTuple(new_beginnings, assign_beginning);
+
+        bool needs_copy = data.get() != nullptr;
+        copyFields(new_beginnings, beginnings, entry_count);
+
+        data = std::move(new_data);
+        entry_capacity = new_entry_capacity;
+        beginnings = new_beginnings;
+        assert(reinterpret_cast<std::uintptr_t>(ptr) <= reinterpret_cast<std::uintptr_t>(data.get()) + (entry_capacity * bytes_per_entry));
     }
 
     template <size_t i>
@@ -113,7 +167,7 @@ public:
         return std::span { std::get<i>(beginnings), entry_count };
     }
 
-    auto operator[](int index) -> TypesRefs
+    auto operator[](int index) -> FieldsRef
     {
         auto result = getElement(beginnings, index, std::tuple<>());
         return result;

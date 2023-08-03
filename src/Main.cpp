@@ -4,51 +4,52 @@
 #include <ranges>
 #include <string>
 
+auto demoSov() -> void;
+
 int main()
 {
-    Map<char, int> m;
-    m.insert('a', 0);
-    m.insert('b', 2);
+    demoSov();
+    return 0;
+}
 
+auto demoSov() -> void
+{
+    // causes werid alignment which is handled.
+    Sov<uint8_t, std::string, uint16_t> sov(10);
 
-    std::cout << alignof(std::string) <<'\n';
-    std::cout << alignof(int) <<'\n';
-    std::cout << alignof(uint16_t) << std::endl;
+    sov.pushBack(0, "first", 1);
+    sov.pushBack(0, "second", 2);
+    sov.pushBack(0, "third", 3);
+    sov.pushBack(0, "fourth", 4);
+    sov.pushBack(0, "fifth", 5);
 
-    std::cout << sizeof(std::string) <<'\n';
-    std::cout << sizeof(int) <<'\n';
-    std::cout << sizeof(uint16_t) << std::endl;
-
-
-    Sov<uint8_t, std::string, int, uint16_t> sov(10);
-
-    sov.pushBack(0, "first", 100, 1);
-    sov.pushBack(0, "second", 200, 2);
-    sov.pushBack(0, "third", 300, 3);
-    sov.pushBack(0, "fourth", 400, 4);
-    sov.pushBack(0, "fifth", 500, 5);
-
-    // element access
+    // individual field access
+    std::cout << "uint8_t[]\t= ";
     for (auto e : sov.field<0>()) {
-        std::cout << e << ' ';
+        std::cout << (int)e << ' ';
     }
-    std::cout << '\n';
+
+    std::cout << '\n'
+              << "std::string[]\t= ";
     for (auto e : sov.field<1>()) {
         std::cout << e << ' ';
     }
-    std::cout << '\n';
+    std::cout << '\n'
+              << "uint16_t[]\t= ";
     for (auto e : sov.field<2>()) {
         std::cout << e << ' ';
     }
+    std::cout << "\n\n";
 
     // reference to elements
-    auto [a, f, s, t] = sov[2];
+    auto [field_1, field_2, field_3] = sov[2];
+
+    field_1 = 11;
+    field_2 = "hi";
+    field_3 = 0;
 
     // range based loops
-    for(auto [a, b, c, d] : sov)
-    {
-        std::cout << a << " " << b << " " << (int)c << ", ";
+    for (auto [a, b, c] : sov) {
+        std::cout << "(" << (int)a << ", " << b << ", " << (int)c << ")\n";
     }
-
-    return 0;
 }
