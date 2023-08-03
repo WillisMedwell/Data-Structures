@@ -1,8 +1,9 @@
 # Data Structures
+All are header implementations.
 
 ## Sov (Structure of Vectors)
-Like a structure of arrays but with reallocation like std::vector, uses a tuple like interface and iterators return a view into the vectors. 
-All memory is in one block making it very cache friendly. 
+Like a structure of arrays but with reallocation like std::vector. All memory is in one block making it very cache friendly. Heavy use of compile time hackery...
+Requires C++20.
 
 ```cpp
 Sov<uint8_t, std::string, uint16_t> sov;
@@ -33,3 +34,6 @@ auto [field_1, field_2, field_3] = sov[2];
 - [ ] erase()
 - [ ] insert()
 - [ ] cbegin() & cend()
+
+## Map 
+Requires C++2b/C++23.
