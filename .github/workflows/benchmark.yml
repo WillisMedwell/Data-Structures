@@ -24,12 +24,12 @@ jobs:
         ./vcpkg/vcpkg install benchmark
 
     - name: Install dependencies
-      run: sudo apt-get install -y g++-10
+      run: sudo apt-get install -y g++-13
       
     - name: Set up environment
       run: |
-        echo "CC=gcc-10" >> $GITHUB_ENV
-        echo "CXX=g++-10" >> $GITHUB_ENV
+        echo "CC=gcc-13" >> $GITHUB_ENV
+        echo "CXX=g++-13" >> $GITHUB_ENV
 
     - name: Configure CMake
       run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
