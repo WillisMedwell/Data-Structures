@@ -14,9 +14,10 @@
 template <typename... Types>
 class Sov {
 public:
-    using FieldsRef = typename std::tuple<Types&...>;
-    using FieldsValue = typename std::tuple<Types...>;
-    using FieldsPtr = typename std::tuple<Types*...>;
+    using FieldsRef = std::tuple<std::remove_const_t<Types>&...>;
+    using FieldsValue = std::tuple<std::remove_const_t<Types>...>;
+    using FieldsPtr = std::tuple<std::remove_const_t<Types>*...>;
+    using FieldsMove = std::tuple<std::remove_const_t<Types>&&...>;
     constexpr static size_t num_types = std::tuple_size<FieldsValue>();
 
     constexpr static size_t bytes_per_entry = sizeof(FieldsValue);
@@ -56,9 +57,21 @@ private: // tuple iteration helpers
         if constexpr (index == num_types) {
             return;
         } else {
-            using ElementType = std::remove_reference_t<decltype(std::get<index>(source))>;
-            new (std::get<index>(destination) + i)(ElementType)(std::get<index>(source));
+            using FieldType = std::remove_reference_t<decltype(std::get<index>(source))>;
+            new (std::get<index>(destination) + i)(FieldType)(std::get<index>(source));
             return pushTuple<index + 1>(destination, source, i);
+        }
+    }
+
+    template <size_t index = 0>
+    constexpr static void emplaceTuple(FieldsPtr& destination, FieldsMove source, const size_t i)
+    {
+        if constexpr (index == num_types) {
+            return;
+        } else {
+            using FieldType = std::remove_reference_t<decltype(std::get<index>(source))>;
+            new (std::get<index>(destination) + i)(FieldType)(std::move(std::get<index>(source)));
+            return emplaceTuple<index + 1>(destination, std::move(source), i);
         }
     }
 
@@ -77,7 +90,22 @@ private: // tuple iteration helpers
     }
 
     template <size_t index = 0>
-    constexpr static void copyFields(FieldsPtr& destination, FieldsPtr& source, size_t count)
+    constexpr static auto destroyElement(FieldsPtr& source, const size_t i) -> void
+    {
+        if constexpr (index == num_types) {
+            return;
+        } else {
+            using FieldType = std::remove_reference_t<decltype(std::get<index>(source)[0])>;
+            if constexpr (std::is_destructible_v<FieldType>) {
+                auto& field = std::get<index>(source)[i];
+                field.~FieldType();
+            }
+            return destroyElement<index + 1>(source, i);
+        }
+    }
+
+    template <size_t index = 0>
+    constexpr static void copyFields(FieldsPtr& destination, const FieldsPtr& source, size_t count)
     {
         if constexpr (index == num_types) {
             return;
@@ -119,6 +147,13 @@ public:
         beginnings = other.beginnings;
     }
 
+    ~Sov()
+    {
+        for (int i = 0; i < entry_count; i++) {
+            destroyElement(beginnings, i);
+        }
+    }
+
     auto pushBack(Types... value) -> void
     {
         if (entry_count == entry_capacity) {
@@ -127,9 +162,20 @@ public:
         pushTuple(beginnings, FieldsValue(value...), entry_count++);
     }
 
+    auto emplaceBack(Types&&... value) -> void
+    {
+        if (entry_count == entry_capacity) {
+            grow(entry_capacity * 2);
+        }
+        emplaceTuple(beginnings, FieldsMove(std::forward<Types>(value)...), entry_count++);
+    }
+
     auto popBack() -> void
     {
-        entry_count = std::min(--entry_count, size_t(0));
+        if (entry_count != 0) {
+            --entry_count;
+            //destroyElement(beginnings, entry_count);
+        }
     }
 
     auto grow(size_t new_entry_capacity)
@@ -140,13 +186,17 @@ public:
         FieldsPtr new_beginnings;
 
         auto assign_beginning = [&ptr, &new_entry_capacity](auto& begin) {
-            using Ptr = decltype(begin);
-            using Value = decltype(*begin);
+            using Ptr = std::remove_reference_t<decltype(begin)>;
+            using Value = std::remove_pointer_t<Ptr>;
             // ensure proper memory alignment
             while (reinterpret_cast<std::uintptr_t>(ptr) % alignof(Value)) {
                 ++ptr;
             }
             begin = reinterpret_cast<Ptr>(ptr);
+            // construct fields
+            for (Ptr e = begin; e < begin + new_entry_capacity; e++) {
+                new (e) Value();
+            }
             ptr += sizeof(Value) * new_entry_capacity;
         };
         forEachTuple(new_beginnings, assign_beginning);
