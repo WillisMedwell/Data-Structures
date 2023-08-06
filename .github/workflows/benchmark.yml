@@ -24,7 +24,7 @@ jobs:
         ./vcpkg/vcpkg install benchmark
 
     - name: Configure CMake
-      run: cmake -S . -B build
+      run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Build Project
       run: cmake --build build
