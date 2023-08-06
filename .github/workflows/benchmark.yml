@@ -1,0 +1,41 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Setup CMake
+      uses: jwlawson/actions-setup-cmake@v1.9
+
+    - name: Setup vcpkg
+      run: |
+        git clone https://github.com/microsoft/vcpkg
+        ./vcpkg/bootstrap-vcpkg.sh
+        ./vcpkg/vcpkg install benchmark
+
+    - name: Install dependencies
+      run: sudo apt-get install -y g++-13
+      
+    - name: Set up environment
+      run: |
+        echo "CC=gcc-13" >> $GITHUB_ENV
+        echo "CXX=g++-13" >> $GITHUB_ENV
+
+    - name: Configure CMake
+      run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+
+    - name: Build Project
+      run: cmake --build build
+
+    - name: Run Benchmarks
+      run: ./build/my_benchmark
