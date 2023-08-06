@@ -34,10 +34,11 @@ private:
 
         auto unsorted_keys = std::ranges::subrange(keys.begin() + sorted_end_index, keys.end());
         auto unsorted_values = std::ranges::subrange(values.begin() + sorted_end_index, values.end());
-
         
-
-        std::ranges::sort(std::views::zip(unsorted_keys, unsorted_values), keyComparison);
+        // this method requires random access iterators on gcc
+        //std::ranges::sort(std::views::zip(unsorted_keys, unsorted_values), keyComparison);
+        auto ukv = std::views::zip(unsorted_keys, unsorted_values);
+        std::stable_sort(ukv.begin(), ukv.end(), keyComparison);
 
         auto keys_values = std::views::zip(keys, values);
 
