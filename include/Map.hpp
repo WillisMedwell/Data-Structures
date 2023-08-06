@@ -1,4 +1,6 @@
 #pragma once
+/*
+// invalidated due to std::views::zip not being avaliable.
 
 #include <algorithm>
 #include <cassert>
@@ -128,3 +130,5 @@ public:
         return Iterator { *this, keys.size() };
     }
 };
+
+*/

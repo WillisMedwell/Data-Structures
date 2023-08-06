@@ -3,14 +3,13 @@
 #include <numeric>
 #include <ranges>
 #include <string>
+#include <iostream>
 
 auto demoSov() -> void;
-auto demoMap() -> void;
 
 int main()
 {
     demoSov();
-    demoMap();
     return 0;
 }
 
@@ -56,9 +55,3 @@ auto demoSov() -> void
     }
 }
 
-auto demoMap() -> void
-{
-    Map<std::string, int> map;
-    map.insert("Willis", 22);
-    std::cout << map["Willis"] << '\n';
-}
