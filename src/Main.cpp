@@ -5,10 +5,12 @@
 #include <string>
 
 auto demoSov() -> void;
+auto demoMap() -> void;
 
 int main()
 {
     demoSov();
+    demoMap();
     return 0;
 }
 
@@ -52,4 +54,11 @@ auto demoSov() -> void
     for (auto [a, b, c] : sov) {
         std::cout << "(" << (int)a << ", " << b << ", " << (int)c << ")\n";
     }
+}
+
+auto demoMap() -> void
+{
+    Map<std::string, int> map;
+    map.insert("Willis", 22);
+    std::cout << map["Willis"] << '\n';
 }

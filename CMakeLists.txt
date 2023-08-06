@@ -21,10 +21,10 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 find_package(benchmark CONFIG REQUIRED)
 
 file(GLOB_RECURSE BENCHMARK_SOURCES "benchmarks/*.cpp")
-add_executable(MyBenchmark ${BENCHMARK_SOURCES})
-target_link_libraries(MyBenchmark PRIVATE benchmark::benchmark benchmark::benchmark_main)
+add_executable(Benchmark ${BENCHMARK_SOURCES})
+target_link_libraries(Benchmark PRIVATE benchmark::benchmark benchmark::benchmark_main)
 target_include_directories(
-    MyBenchmark
+    Benchmark
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
 )
