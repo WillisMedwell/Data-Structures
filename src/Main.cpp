@@ -4,6 +4,7 @@
 #include <ranges>
 #include <string>
 #include <iostream>
+#include <vector>
 
 auto demoSov() -> void;
 
@@ -15,7 +16,7 @@ int main()
 
 auto demoSov() -> void
 {
-    // causes werid alignment which is handled.
+    // can cause werid alignment which is handled.
     Sov<uint8_t, std::string, uint16_t> sov(10);
 
     sov.pushBack(0, "first", 1);
@@ -54,4 +55,3 @@ auto demoSov() -> void
         std::cout << "(" << (int)a << ", " << b << ", " << (int)c << ")\n";
     }
 }
-
