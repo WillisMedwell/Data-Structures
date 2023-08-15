@@ -28,8 +28,7 @@ public:
 
     constexpr static size_t bytes_per_entry = sizeof(FieldsValue);
 
-    // std::unique_ptr<uint8_t[]> data;
-    uint8_t* data;
+    std::unique_ptr<uint8_t[]> data;
     size_t entry_capacity = 0;
     size_t entry_count = 0;
     FieldsPtr beginnings;
@@ -149,10 +148,10 @@ public:
     Sov(size_t init_capacity = 20)
         : entry_capacity(init_capacity)
         , entry_count(0)
-        , data(new uint8_t[bytes_per_entry * init_capacity + 64])
+        , data(std::make_unique<uint8_t[]>(bytes_per_entry * init_capacity + 64))
         , beginnings({})
     {
-        auto ptr = data;
+        uint8_t* ptr = data.get();
 
         auto assign_beginning = [&](auto& begin) {
             using Ptr = std::remove_reference_t<decltype(begin)>;
@@ -192,10 +191,6 @@ public:
         for (int i = 0; i < entry_count; i++) {
             destroyElement(beginnings, i);
         }
-        if (data != nullptr) {
-            delete[] data;
-            data = nullptr;
-        }
     }
 
     void pushBack(const Types&... value)
@@ -229,8 +224,8 @@ public:
         assert(new_entry_capacity > entry_capacity);
         assert(new_entry_capacity > 0);
 
-        auto new_data = new uint8_t[bytes_per_entry * new_entry_capacity + 64];
-        auto ptr = new_data;
+        auto new_data = std::make_unique<uint8_t[]>(bytes_per_entry * new_entry_capacity + 64);
+        uint8_t* ptr = new_data.get();
         FieldsPtr new_beginnings;
 
         auto assign_beginning = [&ptr, &new_entry_capacity](auto& begin) {
@@ -252,14 +247,10 @@ public:
             moveFields(new_beginnings, beginnings, entry_count);
         }
         std::swap(data, new_data);
-        if (new_data != nullptr) {
-            delete[] new_data;
-            new_data = nullptr;
-        }
         entry_capacity = new_entry_capacity;
         beginnings = new_beginnings;
     }
-    
+
     template <size_t i>
     auto field()
     {
