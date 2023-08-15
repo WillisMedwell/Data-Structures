@@ -173,6 +173,7 @@ public:
         : Sov(other.entry_capacity)
     {
         copyFields(beginnings, other.beginnings, other.entry_count);
+        entry_count = other.entry_count;
     }
     Sov(Sov&& other)
         : entry_capacity(other.entry_capacity)
@@ -191,7 +192,10 @@ public:
         for (int i = 0; i < entry_count; i++) {
             destroyElement(beginnings, i);
         }
-        delete[] data;
+        if(data != nullptr)
+        {
+            delete[] data;
+        }
     }
 
     void pushBack(const Types&... value)
@@ -247,33 +251,11 @@ public:
         if (needs_move) {
             moveFields(new_beginnings, beginnings, entry_count);
         }
-        delete[] data;
-        data = nullptr;
-        data = new_data;
+        std::swap(data, new_data);
+        delete[] new_data;
+        new_data = nullptr;
         entry_capacity = new_entry_capacity;
         beginnings = new_beginnings;
-    }
-
-    auto growNoCopy(size_t new_entry_capacity)
-    {
-        entry_capacity = new_entry_capacity;
-        assert(data == nullptr);
-        data = new uint8_t[bytes_per_entry * new_entry_capacity + 64];
-        auto ptr = data;
-
-        auto assign_beginning = [&ptr, &new_entry_capacity](auto& begin) {
-            using Ptr = std::remove_reference_t<decltype(begin)>;
-            using Value = std::remove_pointer_t<Ptr>;
-            if constexpr (!is_same_alignment) {
-                // ensure proper memory alignment
-                while (reinterpret_cast<std::uintptr_t>(ptr) % alignof(Value)) {
-                    ++ptr;
-                }
-            }
-            begin = reinterpret_cast<Ptr>(ptr);
-            ptr += sizeof(Value) * new_entry_capacity;
-        };
-        forEachTuple(beginnings, assign_beginning);
     }
 
     template <size_t i>
