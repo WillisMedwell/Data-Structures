@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
+#include <format>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -13,8 +15,7 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
-#include <format>
-#include <cstring>
+
 
 template <typename... Types>
 class Sov {
@@ -106,6 +107,7 @@ private: // tuple iteration helpers
             if constexpr (std::is_destructible_v<FieldType>) {
                 auto& field = std::get<index>(source)[i];
                 field.~FieldType();
+                memset(&field, 0, sizeof(FieldType));
             }
             return destroyElement<index + 1>(source, i);
         }
@@ -192,8 +194,7 @@ public:
         for (int i = 0; i < entry_count; i++) {
             destroyElement(beginnings, i);
         }
-        if(data != nullptr)
-        {
+        if (data != nullptr) {
             delete[] data;
         }
     }
@@ -275,7 +276,7 @@ public:
     auto at(int index) -> FieldsRef
     {
         if (index >= entry_count || index < 0) {
-            throw std::out_of_range{std::format("Sov::at({}) is out of range, as Sov::size() == {}", index, size())};
+            throw std::out_of_range { std::format("Sov::at({}) is out of range, as Sov::size() == {}", index, size()) };
         }
         return getElement(beginnings, index, std::tuple<>());
     }
