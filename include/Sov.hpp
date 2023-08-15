@@ -191,7 +191,7 @@ public:
         for (int i = 0; i < entry_count; i++) {
             destroyElement(beginnings, i);
         }
-        delete data;
+        delete[] data;
     }
 
     void pushBack(const Types&... value)
@@ -247,7 +247,7 @@ public:
         if (needs_move) {
             moveFields(new_beginnings, beginnings, entry_count);
         }
-        delete data;
+        delete[] data;
         data = nullptr;
         data = new_data;
         entry_capacity = new_entry_capacity;
