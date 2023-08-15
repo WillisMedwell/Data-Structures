@@ -253,7 +253,10 @@ public:
             moveFields(new_beginnings, beginnings, entry_count);
         }
         std::swap(data, new_data);
-        delete[] new_data;
+        if(new_data != nullptr)
+        {
+            delete[] new_data;
+        }
         new_data = nullptr;
         entry_capacity = new_entry_capacity;
         beginnings = new_beginnings;
