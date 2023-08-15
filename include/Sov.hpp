@@ -1,21 +1,24 @@
 #pragma once
 // Structure of vectors implementation
-
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <tuple>
-#include <iostream>
-#include <ranges>
+#include <type_traits>
+#include <vector>
+#include <format>
 
 template <typename... Types>
 class Sov {
 public:
+    using FieldsConstRef = std::tuple<const std::remove_const_t<Types>&...>;
     using FieldsRef = std::tuple<std::remove_const_t<Types>&...>;
     using FieldsValue = std::tuple<std::remove_const_t<Types>...>;
     using FieldsPtr = std::tuple<std::remove_const_t<Types>*...>;
@@ -24,9 +27,10 @@ public:
 
     constexpr static size_t bytes_per_entry = sizeof(FieldsValue);
 
+    // std::unique_ptr<uint8_t[]> data;
+    uint8_t* data;
     size_t entry_capacity = 0;
     size_t entry_count = 0;
-    std::unique_ptr<uint8_t[]> data;
     FieldsPtr beginnings;
 
 private: // tuple iteration helpers
@@ -54,14 +58,25 @@ private: // tuple iteration helpers
     }
 
     template <size_t index = 0>
-    constexpr static void emplaceTuple(FieldsPtr& destination, const auto& source, const size_t i)
+    constexpr static void moveTuple(FieldsPtr& destination, const FieldsMove& source, const size_t i)
     {
         if constexpr (index == num_types) {
             return;
         } else {
             using FieldType = std::remove_reference_t<decltype(std::get<index>(source))>;
             new (std::get<index>(destination) + i)(FieldType)(std::forward<FieldType>(std::get<index>(source)));
-            
+            return moveTuple<index + 1>(destination, source, i);
+        }
+    }
+
+    template <size_t index = 0>
+    constexpr static void emplaceTuple(FieldsPtr& destination, const FieldsConstRef& source, const size_t i)
+    {
+        if constexpr (index == num_types) {
+            return;
+        } else {
+            using FieldType = std::remove_reference_t<decltype(std::get<index>(source))>;
+            new (std::get<index>(destination) + i)(FieldType)(std::get<index>(source));
             return emplaceTuple<index + 1>(destination, source, i);
         }
     }
@@ -101,9 +116,23 @@ private: // tuple iteration helpers
         if constexpr (index == num_types) {
             return;
         } else {
+            // using FieldType = decltype(*std::get<index>(destination));
+
             auto src = std::span { std::get<index>(source), count };
             std::copy(src.begin(), src.end(), std::get<index>(destination));
             return copyFields<index + 1>(destination, source, count);
+        }
+    }
+
+    template <size_t index = 0>
+    constexpr static void moveFields(FieldsPtr& destination, const FieldsPtr& source, size_t count)
+    {
+        if constexpr (index == num_types) {
+            return;
+        } else {
+            using FieldType = decltype(*std::get<index>(destination));
+            std::memcpy(std::get<index>(destination), std::get<index>(source), sizeof(FieldType) * count);
+            return moveFields<index + 1>(destination, source, count);
         }
     }
 
@@ -119,10 +148,10 @@ public:
     Sov(size_t init_capacity = 20)
         : entry_capacity(init_capacity)
         , entry_count(0)
-        , data(std::make_unique<uint8_t[]>(bytes_per_entry * entry_capacity + 64))
+        , data(new uint8_t[bytes_per_entry * init_capacity + 64])
         , beginnings({})
     {
-        auto ptr = data.get();
+        auto ptr = data;
 
         auto assign_beginning = [&](auto& begin) {
             using Ptr = std::remove_reference_t<decltype(begin)>;
@@ -147,9 +176,10 @@ public:
     Sov(Sov&& other)
         : entry_capacity(other.entry_capacity)
         , entry_count(other.entry_count)
-        , data(std::move(other.data))
+        , data(other.data)
         , beginnings(other.beginnings)
     {
+        other.data = nullptr;
         other.entry_capacity = 0;
         other.entry_count = 0;
         other.beginnings = {};
@@ -160,23 +190,25 @@ public:
         for (int i = 0; i < entry_count; i++) {
             destroyElement(beginnings, i);
         }
+        delete data;
     }
 
-    auto pushBack(std::remove_reference_t<Types>... value) -> void
-    {
-        // Types are a copy
-        if (entry_count == entry_capacity) {
-            grow(entry_capacity * 2);
-        }
-        emplaceTuple(beginnings, FieldsMove(std::forward<Types>(value)...), entry_count++);
-    }
-
-    auto emplaceBack(Types&&... value) -> void
+    void pushBack(const Types&... value)
     {
         if (entry_count == entry_capacity) {
             grow(entry_capacity * 2);
         }
-        emplaceTuple(beginnings, FieldsMove(std::forward<Types>(value)...), entry_count++);
+        emplaceTuple(beginnings, FieldsConstRef(value...), entry_count);
+        ++entry_count;
+    }
+
+    auto pushBack(Types&&... value) -> void
+    {
+        if (entry_count == entry_capacity) {
+            grow(entry_capacity * 2);
+        }
+        moveTuple(beginnings, FieldsMove(std::forward<Types>(value)...), entry_count);
+        ++entry_count;
     }
 
     auto popBack() -> void
@@ -189,8 +221,11 @@ public:
 
     auto grow(size_t new_entry_capacity)
     {
-        auto new_data = std::make_unique<uint8_t[]>(bytes_per_entry * new_entry_capacity + 64);
-        auto ptr = new_data.get();
+        assert(new_entry_capacity > entry_capacity);
+        assert(new_entry_capacity > 0);
+
+        auto new_data = new uint8_t[bytes_per_entry * new_entry_capacity + 64];
+        auto ptr = new_data;
         FieldsPtr new_beginnings;
 
         auto assign_beginning = [&ptr, &new_entry_capacity](auto& begin) {
@@ -207,12 +242,13 @@ public:
         };
         forEachTuple(new_beginnings, assign_beginning);
 
-        bool needs_copy = data.get() != nullptr;
-        if (needs_copy) {
-            copyFields(new_beginnings, beginnings, entry_count);
+        bool needs_move = data != nullptr;
+        if (needs_move) {
+            moveFields(new_beginnings, beginnings, entry_count);
         }
-
-        data = std::move(new_data);
+        delete data;
+        data = nullptr;
+        data = new_data;
         entry_capacity = new_entry_capacity;
         beginnings = new_beginnings;
     }
@@ -220,8 +256,9 @@ public:
     auto growNoCopy(size_t new_entry_capacity)
     {
         entry_capacity = new_entry_capacity;
-        data = std::move(std::make_unique<uint8_t[]>(bytes_per_entry * new_entry_capacity + 64));
-        auto ptr = data.get();
+        assert(data == nullptr);
+        data = new uint8_t[bytes_per_entry * new_entry_capacity + 64];
+        auto ptr = data;
 
         auto assign_beginning = [&ptr, &new_entry_capacity](auto& begin) {
             using Ptr = std::remove_reference_t<decltype(begin)>;
@@ -249,8 +286,15 @@ public:
 
     auto operator[](int index) -> FieldsRef
     {
-        auto result = getElement(beginnings, index, std::tuple<>());
-        return result;
+        return getElement(beginnings, index, std::tuple<>());
+    }
+
+    auto at(int index) -> FieldsRef
+    {
+        if (index >= entry_count || index < 0) {
+            throw std::out_of_range{std::format("Sov::at({}) is out of range, as Sov::size() == {}", index, size())};
+        }
+        return getElement(beginnings, index, std::tuple<>());
     }
 
     class Iterator {
@@ -288,7 +332,6 @@ public:
             return sov[static_cast<int>(index)];
         }
     };
-
     auto begin() noexcept -> Iterator
     {
         return Iterator(*this, 0);
@@ -297,7 +340,6 @@ public:
     {
         return Iterator(*this, entry_count);
     }
-
     auto size() const noexcept -> size_t
     {
         return entry_count;

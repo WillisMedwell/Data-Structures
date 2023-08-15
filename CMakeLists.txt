@@ -18,7 +18,7 @@ target_include_directories(
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
 
 # Google Benchmark setup
-find_package(benchmark CONFIG REQUIRED)
+find_package(benchmark REQUIRED)
 
 file(GLOB_RECURSE BENCHMARK_SOURCES "benchmarks/*.cpp")
 add_executable(Benchmark ${BENCHMARK_SOURCES})
@@ -28,3 +28,15 @@ target_include_directories(
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
 )
+
+# GTest setup
+find_package(GTest REQUIRED)
+file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
+add_executable(Test ${TEST_SOURCES})
+target_link_libraries(Test PRIVATE GTest::GTest GTest::Main)
+target_include_directories(
+    Test
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+)
+
