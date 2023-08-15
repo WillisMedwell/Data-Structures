@@ -242,7 +242,7 @@ static void BM_VecPushString(benchmark::State& state)
 
     for (auto _ : state) {
         std::vector<std::string> vec;
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             vec.push_back(a);
         }
         benchmark::DoNotOptimize(vec);
@@ -255,7 +255,7 @@ static void BM_SovPushString(benchmark::State& state)
     std::string a { "hello world" };
     for (auto _ : state) {
         Sov<std::string> sov;
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             sov.pushBack(a);
         }
         benchmark::DoNotOptimize(sov);

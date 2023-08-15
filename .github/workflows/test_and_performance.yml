@@ -34,9 +34,12 @@ jobs:
         echo "CXX=g++-13" >> $GITHUB_ENV
 
     - name: Configure CMake
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 " -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -fsanitize=address" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
     - name: Build Project
       run: cmake --build build
 
     - name: Run Benchmarks
       run: ./build/Benchmark
+
+    - name: Run Tests
+      run: ./build/Test 
