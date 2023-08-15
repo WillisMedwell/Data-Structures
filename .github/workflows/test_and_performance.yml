@@ -38,8 +38,9 @@ jobs:
     - name: Build Project
       run: cmake --build build
 
+    - name: Run Tests
+      run: ./build/Test 
+      
     - name: Run Benchmarks
       run: ./build/Benchmark
 
-    - name: Run Tests
-      run: ./build/Test 

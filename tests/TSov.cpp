@@ -6,6 +6,7 @@ size_t element_destructions = 0;
 
 struct Element {
     int64_t dummy;
+    bool has_been_destroyed = false;
     Element(int arg = 0)
     {
         dummy = arg;
@@ -23,6 +24,11 @@ struct Element {
     }
     ~Element()
     {
+        if(has_been_destroyed)
+        {
+            throw std::runtime_error("destructor called twice");
+        }
+        has_been_destroyed = true;
         ++element_destructions;
     }
 };
@@ -132,3 +138,37 @@ TEST(SovTest, ElementAccess)
 
     EXPECT_THROW(sov.at(2), std::out_of_range);
 }
+
+TEST(SovTest, StringElements)
+{
+    Sov<std::string> sov(1);
+
+    std::string c = "cccccccccccccccccccc";
+    std::string d = "dddddddddddddddddddd";
+
+    sov.pushBack("aaaaaaaaaaaaaaaaaaaa");
+    sov.pushBack("bbbbbbbbbbbbbbbbbbbb");
+    sov.pushBack(c);
+    sov.pushBack(d);
+
+    c = "1";
+    d = "2";
+
+    EXPECT_EQ(sov.field<0>()[0], "aaaaaaaaaaaaaaaaaaaa");
+    EXPECT_EQ(sov.field<0>()[1], "bbbbbbbbbbbbbbbbbbbb");
+    EXPECT_EQ(sov.field<0>()[2], "cccccccccccccccccccc");
+    EXPECT_EQ(sov.field<0>()[3], "dddddddddddddddddddd");
+}
+
+// static void BM_SovPushString(benchmark::State& state)
+// {
+//     std::string a { "hello world" };
+//     for (auto _ : state) {
+//         Sov<std::string> sov;
+//         for (int i = 0; i < 100; i++) {
+//             sov.pushBack(a);
+//         }
+//         benchmark::DoNotOptimize(sov);
+//     }
+// }
+// BENCHMARK(BM_SovPushString);

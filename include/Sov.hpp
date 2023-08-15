@@ -16,7 +16,6 @@
 #include <type_traits>
 #include <vector>
 
-
 template <typename... Types>
 class Sov {
 public:
@@ -107,7 +106,6 @@ private: // tuple iteration helpers
             if constexpr (std::is_destructible_v<FieldType>) {
                 auto& field = std::get<index>(source)[i];
                 field.~FieldType();
-                memset(&field, 0, sizeof(FieldType));
             }
             return destroyElement<index + 1>(source, i);
         }
@@ -196,6 +194,7 @@ public:
         }
         if (data != nullptr) {
             delete[] data;
+            data = nullptr;
         }
     }
 
@@ -253,15 +252,14 @@ public:
             moveFields(new_beginnings, beginnings, entry_count);
         }
         std::swap(data, new_data);
-        if(new_data != nullptr)
-        {
+        if (new_data != nullptr) {
             delete[] new_data;
+            new_data = nullptr;
         }
-        new_data = nullptr;
         entry_capacity = new_entry_capacity;
         beginnings = new_beginnings;
     }
-
+    
     template <size_t i>
     auto field()
     {
