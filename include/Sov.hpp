@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <vector>
 #include <format>
+#include <cstring>
 
 template <typename... Types>
 class Sov {
@@ -131,7 +132,7 @@ private: // tuple iteration helpers
             return;
         } else {
             using FieldType = decltype(*std::get<index>(destination));
-            std::memcpy(std::get<index>(destination), std::get<index>(source), sizeof(FieldType) * count);
+            memcpy(std::get<index>(destination), std::get<index>(source), sizeof(FieldType) * count);
             return moveFields<index + 1>(destination, source, count);
         }
     }
