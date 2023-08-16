@@ -58,13 +58,13 @@ private: // tuple iteration helpers
     }
 
     template <size_t index = 0>
-    constexpr static void moveTuple(FieldsPtr& destination, const FieldsMove& source, const size_t i)
+    constexpr static void moveTuple(FieldsPtr& destination, FieldsMove& source, const size_t i)
     {
         if constexpr (index == num_types) {
             return;
         } else {
             using FieldType = std::remove_reference_t<decltype(std::get<index>(source))>;
-            new (std::get<index>(destination) + i)(FieldType)(std::forward<FieldType>(std::get<index>(source)));
+            new (std::get<index>(destination) + i) (FieldType)(std::get<index>(source));
             return moveTuple<index + 1>(destination, source, i);
         }
     }
@@ -207,7 +207,8 @@ public:
         if (entry_count == entry_capacity) {
             grow(entry_capacity * 2);
         }
-        moveTuple(beginnings, FieldsMove(std::forward<Types>(value)...), entry_count);
+        auto fields = FieldsMove(std::forward<Types>(value)...);
+        moveTuple(beginnings, fields, entry_count);
         ++entry_count;
     }
 

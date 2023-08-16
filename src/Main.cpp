@@ -53,5 +53,4 @@ auto demoSov() -> void
     for (auto [a, b, c] : sov) {
         std::cout << "(" << (int)a << ", " << b << ", " << (int)c << ")\n";
     }
-    
 }
