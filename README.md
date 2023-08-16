@@ -1,3 +1,4 @@
+![Test Badge](https://github.com/WillisMedwell/Data-Structures/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/Data-Structures/actions/workflows/benchmark.yml/badge.svg)
 # Data Structures
 All are header implementations.
 
