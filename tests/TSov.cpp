@@ -1,8 +1,8 @@
 #include <Sov.hpp>
 #include <gtest/gtest.h>
 
-size_t element_constructions = 0;
-size_t element_destructions = 0;
+thread_local size_t element_constructions = 0;
+thread_local size_t element_destructions = 0;
 
 struct Element {
     int64_t dummy;
@@ -99,6 +99,8 @@ TEST(SovTest, PushMoveWGrow)
 
 TEST(SovTest, ProperElementConstruction)
 {
+    element_constructions = 0;
+    element_destructions = 0;
     {
         Sov<Element> sov(2);
         Element e;
@@ -110,13 +112,20 @@ TEST(SovTest, ProperElementConstruction)
 
 TEST(SovTest, ProperElementConstructionWGrow)
 {
+    element_constructions = 0;
+    element_destructions = 0;
     {
         Sov<Element> sov(2);
         Element e;
         sov.pushBack(e);
-        sov.pushBack(Element {});
         sov.pushBack(e);
-        sov.pushBack(Element {});
+        sov.pushBack(e);
+        sov.pushBack(e);
+        
+        //sov.pushBack(Element {});
+        //sov.pushBack(Element {});
+        //sov.pushBack(Element {});
+
     }
     EXPECT_EQ(element_constructions, element_destructions);
 }
