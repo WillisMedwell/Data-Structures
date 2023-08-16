@@ -33,14 +33,6 @@ jobs:
         echo "CC=gcc-13" >> $GITHUB_ENV
         echo "CXX=g++-13" >> $GITHUB_ENV
 
-    - name: Build for Tests
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -fsanitize=address -fsanitize-recover=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
-        cmake --build build
-
-    - name: Run Tests
-      run: ./build/Test 
-
     - name: Build for Benchmarking
       run: |
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
