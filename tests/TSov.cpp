@@ -1,10 +1,13 @@
 #include <Sov.hpp>
 #include <gtest/gtest.h>
 
+
+namespace TSov {
 thread_local size_t element_constructions = 0;
 thread_local size_t element_destructions = 0;
 
-struct Element {
+struct Element
+ {
     int64_t dummy;
     bool has_been_destroyed = false;
     Element(int arg = 0)
@@ -24,23 +27,22 @@ struct Element {
     }
     ~Element()
     {
-        if(has_been_destroyed)
-        {
+        if (has_been_destroyed) {
             throw std::runtime_error("destructor called twice");
         }
         has_been_destroyed = true;
         ++element_destructions;
     }
 };
-
+}
 TEST(SovTest, Construction)
 {
     Sov<int> sov(2);
     EXPECT_EQ(sov.size(), 0);
 }
-
 TEST(SovTest, PushConstRef)
 {
+    using namespace TSov;
     Sov<Element> sov(4);
     Element e0(0);
     Element e1(1);
@@ -57,6 +59,7 @@ TEST(SovTest, PushConstRef)
 }
 TEST(SovTest, PushMove)
 {
+    using namespace TSov;
     Sov<Element> sov(4);
     sov.pushBack(Element { 0 });
     sov.pushBack(Element { 1 });
@@ -67,9 +70,9 @@ TEST(SovTest, PushMove)
     EXPECT_EQ(sov.field<0>()[2].dummy, 2);
     EXPECT_EQ(sov.field<0>()[3].dummy, 3);
 }
-
 TEST(SovTest, PushConstRefWGrow)
 {
+    using namespace TSov;
     Sov<Element> sov(2);
     Element e0(0);
     Element e1(1);
@@ -86,6 +89,7 @@ TEST(SovTest, PushConstRefWGrow)
 }
 TEST(SovTest, PushMoveWGrow)
 {
+    using namespace TSov;
     Sov<Element> sov(2);
     sov.pushBack(Element { 0 });
     sov.pushBack(Element { 1 });
@@ -96,9 +100,9 @@ TEST(SovTest, PushMoveWGrow)
     EXPECT_EQ(sov.field<0>()[2].dummy, 2);
     EXPECT_EQ(sov.field<0>()[3].dummy, 3);
 }
-
 TEST(SovTest, ProperElementConstruction)
 {
+    using namespace TSov;
     element_constructions = 0;
     element_destructions = 0;
     {
@@ -109,27 +113,21 @@ TEST(SovTest, ProperElementConstruction)
     }
     EXPECT_EQ(element_constructions, element_destructions);
 }
-
 TEST(SovTest, ProperElementConstructionWGrow)
 {
+    using namespace TSov;
     element_constructions = 0;
     element_destructions = 0;
     {
         Sov<Element> sov(2);
         Element e;
         sov.pushBack(e);
+        sov.pushBack(Element {});
         sov.pushBack(e);
-        sov.pushBack(e);
-        sov.pushBack(e);
-        
-        //sov.pushBack(Element {});
-        //sov.pushBack(Element {});
-        //sov.pushBack(Element {});
-
+        sov.pushBack(Element {});
     }
     EXPECT_EQ(element_constructions, element_destructions);
 }
-
 TEST(SovTest, ElementAccess)
 {
     Sov<uint8_t, std::string, uint16_t> sov(1);
@@ -147,7 +145,6 @@ TEST(SovTest, ElementAccess)
 
     EXPECT_THROW(sov.at(2), std::out_of_range);
 }
-
 TEST(SovTest, StringElements)
 {
     Sov<std::string> sov(1);
@@ -168,16 +165,3 @@ TEST(SovTest, StringElements)
     EXPECT_EQ(sov.field<0>()[2], "cccccccccccccccccccc");
     EXPECT_EQ(sov.field<0>()[3], "dddddddddddddddddddd");
 }
-
-// static void BM_SovPushString(benchmark::State& state)
-// {
-//     std::string a { "hello world" };
-//     for (auto _ : state) {
-//         Sov<std::string> sov;
-//         for (int i = 0; i < 100; i++) {
-//             sov.pushBack(a);
-//         }
-//         benchmark::DoNotOptimize(sov);
-//     }
-// }
-// BENCHMARK(BM_SovPushString);

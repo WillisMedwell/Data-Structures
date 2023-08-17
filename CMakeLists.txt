@@ -19,7 +19,6 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 
 # Google Benchmark setup
 find_package(benchmark REQUIRED)
-
 file(GLOB_RECURSE BENCHMARK_SOURCES "benchmarks/*.cpp")
 add_executable(Benchmark ${BENCHMARK_SOURCES})
 target_link_libraries(Benchmark PRIVATE benchmark::benchmark benchmark::benchmark_main)

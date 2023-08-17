@@ -1,56 +1,147 @@
 #pragma once
-/*
-// invalidated due to std::views::zip not being avaliable.
-
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <ranges>
 #include <vector>
-#include <array>
+
+#include <Sov.hpp>
 
 template <typename Key, typename Value>
 class Map {
 private:
-    std::vector<Key> keys;
-    std::vector<Value> values;
-
-    size_t sorted_end_index;
+    Sov<size_t, Key, Value> data;
+    int sorted_size;
+    std::hash<Key> hasher;
 
 public:
     constexpr Map()
-        : keys({})
-        , values({})
-        , sorted_end_index(0)
+        : data()
+        , sorted_size(0)
     {
-        keys.reserve(20);
-        values.reserve(20);
+    }
+    constexpr auto size() -> size_t
+    {
+        return data.size();
+    }
+    constexpr auto insert(const Key& key, const Value& value) -> void
+    {
+        data.pushBack(hasher(key), key, value);
     }
 
 private:
+    template <typename Compare = std::less<>>
+    auto mergeSort(Compare predicate = Compare {})
+    {
+        auto hashes = data.field<0>();
+        auto keys = data.field<1>();
+        auto values = data.field<2>();
+
+        for (int i = 0; i < data.size(); i++) {
+            for (int j = i; j > 0; j--) {
+                const int lhs_index = j - 1;
+                const int rhs_index = j;
+
+                if (!predicate(hashes[lhs_index], hashes[rhs_index])) {
+                    std::swap(hashes[lhs_index], hashes[rhs_index]);
+                    std::swap(keys[lhs_index], keys[rhs_index]);
+                    std::swap(values[lhs_index], values[rhs_index]);
+                    continue;
+                }
+                break;
+            }
+        }
+    }
+
+public:
+    auto sort() -> void
+    {
+        mergeSort();
+        sorted_size = data.size();
+    }
+
+private:
+    auto getIndexOf(const Key& key) -> int
+    {
+        auto hash_to_find = hasher(key);
+
+        const auto all_hashes = data.field<0>();
+        const auto all_keys = data.field<1>();
+
+        auto sorted_hashes = all_hashes | std::views::take(sorted_size);
+        auto iter = std::ranges::lower_bound(sorted_hashes, hash_to_find);
+        auto index = std::distance(sorted_hashes.begin(), iter);
+        if (iter != sorted_hashes.end() && all_keys[index] == key) {
+            return index;
+        }
+        sort();
+
+        iter = std::ranges::lower_bound(all_hashes, hash_to_find);
+        index = std::distance(all_hashes.begin(), iter);
+        if (iter != all_hashes.end() && all_keys[index] == key) {
+            return index;
+        }
+        return data.size();
+    }
+
+public:
+    auto at(const Key& key) -> Value&
+    {
+        if(data.size() <= 100)
+        {
+            return atLinear(key);
+        }
+        else 
+        {
+            return atBinary(key);
+        }
+    }
+
+    auto atLinear(const Key& key) -> Value&
+    {
+        
+        const auto hashes = data.field<0>();
+        auto iter = std::ranges::find(hashes, hasher(key));
+        if (iter == hashes.end()) {
+            throw std::runtime_error(std::format("Map::at(\"{}\") does not contain the key.", key));
+        }
+        return data.field<2>()[std::distance(hashes.begin(), iter)];
+    }
+
+    auto atBinary(const Key& key) -> Value&
+    {
+        auto index = getIndexOf(key);
+        if (index == data.size()) {
+            throw std::runtime_error(std::format("Map::at(\"{}\") does not contain the key.", key));
+        }
+        return data.field<2>()[index];
+    }
+
+    /*
     constexpr auto sort() -> void
     {
-        auto keyComparison = [](const auto& lhs, const auto& rhs) {
-            return std::get<0>(lhs) < std::get<0>(rhs);
-        };
+        //auto keyComparison = [](const auto& lhs, const auto& rhs) {
+        //    return std::get<0>(lhs) < std::get<0>(rhs);
+        //};
 
-        auto unsorted_keys = std::ranges::subrange(keys.begin() + sorted_end_index, keys.end());
-        auto unsorted_values = std::ranges::subrange(values.begin() + sorted_end_index, values.end());
-        
+        //auto unsorted_keys = std::ranges::subrange(keys.begin() + sorted_end_index, keys.end());
+        //auto unsorted_values = std::ranges::subrange(values.begin() + sorted_end_index, values.end());
+
         // this method requires random access iterators on gcc
-        //std::ranges::sort(std::views::zip(unsorted_keys, unsorted_values), keyComparison);
-        auto ukv = std::views::zip(unsorted_keys, unsorted_values);
-        std::stable_sort(ukv.begin(), ukv.end(), keyComparison);
+        // std::ranges::sort(std::views::zip(unsorted_keys, unsorted_values), keyComparison);
+        // auto ukv = std::views::zip(unsorted_keys, unsorted_values);
+        // std::stable_sort(ukv.begin(), ukv.end(), keyComparison);
 
-        auto keys_values = std::views::zip(keys, values);
+        //auto keys_values = std::views::zip(keys, values);
 
-        std::inplace_merge(
-            keys_values.begin(),
-            keys_values.begin() + sorted_end_index,
-            keys_values.end(),
-            keyComparison);
+        //std::inplace_merge(
+        //    keys_values.begin(),
+        //    keys_values.begin() + sorted_end_index,
+        //    keys_values.end(),
+        //    keyComparison);
 
-        sorted_end_index = std::ranges::size(keys_values);
+        //sorted_end_index = std::ranges::size(keys_values);
     }
     constexpr auto search(const Key& key)
     {
@@ -86,6 +177,9 @@ public:
         return values.at(std::distance(keys.cbegin(), iter));
     }
 
+    */
+
+public:
     class Iterator {
         Map& map;
         size_t index;
@@ -117,7 +211,8 @@ public:
         }
         auto operator*() -> std::pair<Key&, Value&>
         {
-            return { map.keys[index], map.values[index] };
+            auto [h, k, v] = map.data[index];
+            return { k, v };
         }
     };
 
@@ -127,8 +222,8 @@ public:
     }
     auto end() -> Iterator
     {
-        return Iterator { *this, keys.size() };
+        return Iterator { *this, data.size() };
     }
 };
 
-*/
+template class Map<std::string, int>;

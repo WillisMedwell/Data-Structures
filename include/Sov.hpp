@@ -19,7 +19,7 @@
 
 template <typename... Types>
 class Sov {
-public:
+private:
     using FieldsConstRef = std::tuple<const std::remove_const_t<Types>&...>;
     using FieldsRef = std::tuple<std::remove_const_t<Types>&...>;
     using FieldsValue = std::tuple<std::remove_const_t<Types>...>;
@@ -177,6 +177,7 @@ public:
         };
         forEachTuple(beginnings, assign_beginning);
     }
+
     Sov(const Sov& other)
         : Sov(other.entry_capacity)
     {
@@ -187,10 +188,9 @@ public:
     Sov(Sov&& other)
         : entry_capacity(other.entry_capacity)
         , entry_count(other.entry_count)
-        , data(other.data)
+        , data(std::move(other.data))
         , beginnings(other.beginnings)
     {
-        other.data = nullptr;
         other.entry_capacity = 0;
         other.entry_count = 0;
         other.beginnings = {};
@@ -198,9 +198,12 @@ public:
 
     ~Sov()
     {
-        for (int i = 0; i < entry_count; i++) {
-            destroyElement(beginnings, i);
-        }
+        auto deleteField = [&](auto& ptr) {
+            auto field = std::span { ptr, entry_count };
+            std::ranges::destroy(field);
+            ptr = nullptr;
+        };
+        forEachTuple(beginnings, deleteField);
     }
 
     void pushBack(const Types&... value)
@@ -212,15 +215,15 @@ public:
         ++entry_count;
     }
 
-    // auto pushBack(Types&&... value) -> void
-    //{
-    //     if (entry_count == entry_capacity) {
-    //         grow(entry_capacity * 2);
-    //     }
-    //     auto fields = FieldsMove(std::forward<Types>(value)...);
-    //     moveTuple(beginnings, fields, entry_count);
-    //     ++entry_count;
-    // }
+    auto pushBack(Types&&... value) -> void
+    {
+        if (entry_count == entry_capacity) {
+            grow(entry_capacity * 2);
+        }
+        auto fields = FieldsMove(std::forward<Types>(value)...);
+        moveTuple(beginnings, fields, entry_count);
+        ++entry_count;
+    }
 
     auto popBack() -> void
     {
