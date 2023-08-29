@@ -273,6 +273,14 @@ public:
         return std::ranges::subrange { b, e };
     }
 
+    template <typename T>
+    auto field()
+    {
+        auto b = std::get<T*>(beginnings);
+        auto e = b + entry_count;
+        return std::ranges::subrange { b, e };
+    }
+
     auto operator[](int index) -> FieldsRef
     {
         return getElement(beginnings, index, std::tuple<>());

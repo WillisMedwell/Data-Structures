@@ -1,5 +1,7 @@
 #include "Map.hpp"
 #include "Sov.hpp"
+#include "Ecs.hpp"
+
 #include <iostream>
 #include <numeric>
 #include <ranges>
@@ -10,11 +12,47 @@ auto demoSov() -> void;
 
 #include <vector>
 
+struct Person
+{
+    std::string name;
+};
+
+struct Moving
+{
+    std::pair<float, float> position;
+    std::pair<float, float> velocity;
+};
+
+struct MovingPerson
+{
+    std::string name;
+    std::pair<float, float> position;
+    std::pair<float, float> velocity;
+};
+
 int main()
 {
     demoSov();
+
+    auto p = EcsMetaprogramming::getCompositonOf<Person>();
+    auto d = EcsMetaprogramming::getCompositonOf<Moving>();
+    auto mp = EcsMetaprogramming::getCompositonOf<MovingPerson>();
+
+    Ecs<Person, Moving, MovingPerson> ecs;
+
+    auto thing = ecs.data;
+
+    ecs.add(Person{});
+    ecs.add(Moving{});
+    ecs.add(MovingPerson{});
+
+
     return 0;
 }
+
+
+
+
 
 auto demoSov() -> void
 {
