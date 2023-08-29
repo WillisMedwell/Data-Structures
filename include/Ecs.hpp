@@ -8,12 +8,6 @@ template <typename T>
 concept CHasName = requires(T t) {
     std::is_same_v<decltype(t.name), std::string>;
 };
-template <typename T>
-concept CHasKinematics = requires(T t) {
-    std::is_same_v<decltype(t.velocity), std::pair<float, float>>;
-    std::is_same_v<decltype(t.position), std::pair<float, float>>;
-};
-
 struct Name {
     std::string name;
 
@@ -21,11 +15,32 @@ struct Name {
     {
         return name;
     }
+
+    static Name getCorresponding(const CHasName auto& thing)
+    {   
+        return Name{thing.name};
+    }
+};
+
+template <typename T>
+concept CHasKinematics = requires(T t) {
+    std::is_same_v<decltype(t.velocity), std::pair<float, float>>;
+    std::is_same_v<decltype(t.position), std::pair<float, float>>;
 };
 
 struct Kinematics {
     float x_vel, y_vel;
     float x_pos, y_pos;
+
+    static Kinematics getCorresponding(const CHasKinematics auto& thing)
+    {   
+        return {
+            thing.velocity.first, 
+            thing.velocity.second, 
+            thing.position.first, 
+            thing.position.second 
+        };
+    }
 };
 
 template <typename Tuple, typename T>
@@ -66,17 +81,31 @@ Sov<Types...> makeSovFromTuple(const std::tuple<Types...>& t)
         t);
 }
 
-template <size_t Index = 0, typename T, typename Tuple>
-consteval auto indexOfType()
+template <typename T, typename Tuple, int Index = 0>
+consteval int indexOfType()
 {
     if constexpr (Index == std::tuple_size_v<Tuple>) {
-        return Index;
+        return -1;
     } else {
-        if constexpr (std::is_same_v<std::tuple_element_t<Index, Tuple>, T>) {
+        if (std::is_same_v<std::tuple_element_t<Index, Tuple>, T>) {
             return Index;
         } else {
-            return indexOfType<Index + 1, T, Tuple>();
+            return indexOfType<T, Tuple, Index + 1>();
         }
+    }
+}
+
+template<typename T, typename StoredTuple, size_t Index = 1>
+StoredTuple construct(const T& t, StoredTuple&& tuple = StoredTuple{})
+{
+    if constexpr(Index == std::tuple_size_v<StoredTuple>)
+    {
+        return tuple;
+    }
+    else 
+    {
+        std::get<Index>(tuple) = std::tuple_element_t<Index, StoredTuple>::getCorresponding(t);
+        return construct<T, StoredTuple, Index + 1>(t, std::forward<StoredTuple>(tuple));
     }
 }
 
@@ -85,6 +114,8 @@ consteval auto indexOfType()
 template <typename... Types>
 class Ecs {
 public:
+
+
     std::tuple<decltype(EcsMetaprogramming::makeSovFromTuple(EcsMetaprogramming::getCompositonOf<Types>()))...> data;
 
     void printNamable()
@@ -100,10 +131,18 @@ public:
     }
 
     template <typename T>
-    void add(const T& element)
+    auto add(const T& element)
     {
         using TypesTuple = std::tuple<Types...>;
-        constexpr auto i = EcsMetaprogramming::indexOfType<0, T, TypesTuple>();
-        std::cout << i << '\n';
+
+        constexpr auto i = EcsMetaprogramming::indexOfType<T, TypesTuple>();
+        static_assert(i != -1, "Type is not defined in the ECS template, so it cannot be added to system");
+
+        using StoredType = decltype(EcsMetaprogramming::getCompositonOf<T>());
+        
+        StoredType t = EcsMetaprogramming::construct<T, StoredType>(element);
+        
+        std::get<i>(data).pushBack(t);
+        
     }
 };

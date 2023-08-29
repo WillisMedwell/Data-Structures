@@ -47,6 +47,8 @@ int main()
     ecs.add(MovingPerson{});
 
 
+    ecs.printNamable();
+
     return 0;
 }
 

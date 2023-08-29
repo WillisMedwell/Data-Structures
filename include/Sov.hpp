@@ -225,6 +225,15 @@ public:
         ++entry_count;
     }
 
+    void pushBack(const FieldsValue& value)
+    {
+        if (entry_count == entry_capacity) {
+            grow(entry_capacity * 2);
+        }
+        emplaceTuple(beginnings, FieldsConstRef(value), entry_count);
+        ++entry_count;
+    }
+
     auto popBack() -> void
     {
         if (entry_count != 0) {
