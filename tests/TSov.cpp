@@ -165,3 +165,22 @@ TEST(SovTest, StringElements)
     EXPECT_EQ(sov.field<0>()[2], "cccccccccccccccccccc");
     EXPECT_EQ(sov.field<0>()[3], "dddddddddddddddddddd");
 }
+
+TEST(SovTest, hasField)
+{
+    Sov<std::string, int> sov(1);
+    
+    constexpr bool has_field = Sov<std::string>::hasField<int>();
+
+    EXPECT_EQ(decltype(sov)::hasField<std::string>(), true);
+    EXPECT_EQ(decltype(sov)::hasField<int>(), true);
+    EXPECT_EQ(decltype(sov)::hasField<float>(), false);
+
+    //constexpr bool has_string_field = SovHasField<decltype(sov), std::string>::value;
+    //constexpr bool has_int_field = SovHasField<decltype(sov), int>::value;
+    //constexpr bool has_float_field = SovHasField<decltype(sov), float>::value;
+
+    //EXPECT_EQ(has_string_field, true);
+    //EXPECT_EQ(has_int_field, true);
+    //EXPECT_EQ(has_float_field, false);
+}

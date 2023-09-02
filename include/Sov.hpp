@@ -20,31 +20,32 @@
 template <typename... Types>
 class Sov {
 private:
-    using FieldsConstRef = std::tuple<const std::remove_const_t<Types>&...>;
-    using FieldsRef = std::tuple<std::remove_const_t<Types>&...>;
-    using FieldsValue = std::tuple<std::remove_const_t<Types>...>;
-    using FieldsPtr = std::tuple<std::remove_const_t<Types>*...>;
-    using FieldsMove = std::tuple<std::remove_const_t<Types>&&...>;
+    using FieldsValue = std::tuple<Types...>;
+    using FieldsPtr = std::tuple<Types*...>;
+    using FieldsRef = std::tuple<Types&...>;
+    using FieldsConstRef = std::tuple<const Types&...>;
+    using FieldsMove = std::tuple<Types&&...>;
     constexpr static size_t num_types = std::tuple_size<FieldsValue>();
 
     constexpr static size_t bytes_per_entry = sizeof(FieldsValue);
 
-    std::unique_ptr<uint8_t[], std::default_delete<uint8_t[]>> data;
+    // std::unique_ptr<uint8_t[], std::default_delete<uint8_t[]>> data;
+    uint8_t* data;
     size_t entry_capacity = 0;
     size_t entry_count = 0;
     FieldsPtr beginnings;
 
 private: // tuple iteration helpers
     template <size_t index = 0, typename Tuple, typename T, class Pred>
-    constexpr static auto accumulateTuple(Tuple& tuple, T init,
+    constexpr static auto accumulateTuple(Tuple tuple, T init,
         Pred predicate)
     {
         if constexpr (index == std::tuple_size<Tuple>()) {
             return init;
         } else {
             auto& element = std::get<index>(tuple);
-            return accumulateTuple<index + 1>(tuple, predicate(init, element),
-                predicate);
+            init = predicate(init, element);
+            return accumulateTuple<index + 1, Tuple, T, Pred>(tuple, init, predicate);
         }
     }
 
@@ -155,13 +156,16 @@ private: // tuple iteration helpers
     static constexpr bool is_same_alignment = isSameAlignment<Types...>();
 
 public:
-    Sov(size_t init_capacity = 20)
+    constexpr Sov(size_t init_capacity = 20)
         : entry_capacity(init_capacity)
         , entry_count(0)
-        , data(std::make_unique<uint8_t[]>(bytes_per_entry * init_capacity + 64))
+        //, data(std::make_unique<uint8_t[]>(bytes_per_entry * init_capacity + 64))
+        , data(new uint8_t[bytes_per_entry * init_capacity + 64])
         , beginnings({})
     {
-        uint8_t* ptr = data.get();
+        static_assert(std::conjunction_v<std::is_default_constructible<Types>...>,
+            "All types must be default-constructible");
+        uint8_t* ptr = data;
 
         auto assign_beginning = [&](auto& begin) {
             using Ptr = std::remove_reference_t<decltype(begin)>;
@@ -188,7 +192,7 @@ public:
     Sov(Sov&& other)
         : entry_capacity(other.entry_capacity)
         , entry_count(other.entry_count)
-        , data(std::move(other.data))
+        , data(other.data)
         , beginnings(other.beginnings)
     {
         other.entry_capacity = 0;
@@ -204,6 +208,7 @@ public:
             ptr = nullptr;
         };
         forEachTuple(beginnings, deleteField);
+        delete[] data;
     }
 
     void pushBack(const Types&... value)
@@ -247,8 +252,8 @@ public:
         assert(new_entry_capacity > entry_capacity);
         assert(new_entry_capacity > 0);
 
-        auto new_data = std::make_unique<uint8_t[]>(bytes_per_entry * new_entry_capacity + 64);
-        uint8_t* ptr = new_data.get();
+        auto new_data = new uint8_t[bytes_per_entry * new_entry_capacity + 64];
+        uint8_t* ptr = new_data;
         FieldsPtr new_beginnings;
 
         auto assign_beginning = [&](auto& begin) {
@@ -264,13 +269,14 @@ public:
             ptr += sizeof(Value) * new_entry_capacity;
         };
         forEachTuple(new_beginnings, assign_beginning);
-        assert(ptr < new_data.get() + (bytes_per_entry * new_entry_capacity + 64));
+        assert(ptr < new_data + (bytes_per_entry * new_entry_capacity + 64));
 
         moveFields(new_beginnings, beginnings, entry_count);
 
-        data = std::move(new_data);
+        std::swap(data, new_data);
         entry_capacity = new_entry_capacity;
         beginnings = new_beginnings;
+        delete[] new_data;
     }
 
     template <size_t i>
@@ -288,6 +294,25 @@ public:
         auto b = std::get<T*>(beginnings);
         auto e = b + entry_count;
         return std::ranges::subrange { b, e };
+    }
+
+    template <typename Field>
+    auto field() const -> const std::span<const Field>
+    {
+        auto b = std::get<Field*>(beginnings);
+        auto e = b + entry_count;
+        return { b, e };
+    }
+
+    template <typename Field>
+    consteval static bool hasField(Field field)
+    {
+
+        auto containsField = [&](bool has_field, auto t) -> bool {
+            return (has_field || std::is_same_v<decltype(t), Field>);
+        };
+        bool result = accumulateTuple(FieldsValue {}, false, containsField);
+        return result;
     }
 
     auto operator[](int index) -> FieldsRef
@@ -342,3 +367,24 @@ public:
     auto end() noexcept -> Iterator { return Iterator(*this, entry_count); }
     auto size() const noexcept -> size_t { return entry_count; }
 };
+
+// template <class Sov, typename Field>
+// concept CSovHasField = requires(Sov sov, Field field) {
+//     { Sov::hasField(Field{}) } -> std::same_as<bool>;
+//     requires sov.hasField(field) == true;
+// };
+
+// template<typename Sov, typename Field>
+// struct SovHasField
+//{
+// private:
+//    consteval static bool hasField()
+//    {
+//        Sov sov;
+//        Field field;
+//        return sov.hasField(field);
+//    }
+//
+// public:
+//     constexpr static bool value = hasField();
+// };
