@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 # Just annoying.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-template-keyword")
+elsif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX")
 endif()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c" "src/*.cxx")

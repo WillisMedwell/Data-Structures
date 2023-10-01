@@ -24,16 +24,16 @@ jobs:
         ./vcpkg/vcpkg integrate install
 
     - name: Install dependencies
-      run: sudo apt-get install -y g++-13
-      
+      run: sudo apt-get install -y clang-13
+
     - name: Set up environment
       run: |
-        echo "CC=gcc-13" >> $GITHUB_ENV
-        echo "CXX=g++-13" >> $GITHUB_ENV
+        echo "CC=clang-13" >> $GITHUB_ENV
+        echo "CXX=clang++-13" >> $GITHUB_ENV
 
-    - name: Build for Tests
+    - name: Build for Benchmarking
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -fsanitize=address -fsanitize-recover=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
         ./vcpkg/vcpkg integrate install
         cmake --build build
 
