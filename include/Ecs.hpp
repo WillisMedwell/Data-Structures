@@ -51,15 +51,15 @@ constexpr auto forEach(Tuple& tuple, Pred predicate)
 }
 
 template <typename T, typename... Ts>
-struct contains : std::false_type {};
+struct contains : std::false_type { };
 
 template <typename T, typename U, typename... Ts>
-struct contains<T, U, Ts...> : contains<T, Ts...> {};
+struct contains<T, U, Ts...> : contains<T, Ts...> { };
 
 template <typename T, typename... Ts>
-struct contains<T, T, Ts...> : std::true_type {};
+struct contains<T, T, Ts...> : std::true_type { };
 
-template<typename Tuple, typename T>
+template <typename Tuple, typename T>
 concept CTupleHasType = contains<T, std::tuple_element_t<0, Tuple>>::value;
 
 }
@@ -236,18 +236,39 @@ public:
     template <typename T>
     auto begin()
     {
-        if constexpr (EcsMetaprogramming::CTupleHasType<Components, T>) {
-            std::cout << "is a component type\n";
-        } else if constexpr (EcsMetaprogramming::CTupleHasType<TupleTypes, T>) {
-            std::cout << "is an entity type\n";
+        constexpr bool is_component_iterator = EcsMetaprogramming::CTupleHasType<Components, T>;
+        constexpr bool is_entity_iterator = EcsMetaprogramming::CTupleHasType<TupleTypes, T>;
+
+        if constexpr (is_component_iterator) {
+
+        } else if constexpr (is_entity_iterator) {
+            using ComponentType = decltype(getCompositionOf<Components, T>());
+            using ComponentTypeSov = decltype(EcsMetaprogramming::makeSovFromTuple(ComponentType{}));
+            return std::get<ComponentTypeSov>(data).begin();
         } else {
             throw std::runtime_error("cannot iterate over this type");
         }
     }
 
-    template<typename T>
-    struct EntityIterator
+    template <typename T>
+    auto end()
     {
+        constexpr bool is_component_iterator = EcsMetaprogramming::CTupleHasType<Components, T>;
+        constexpr bool is_entity_iterator = EcsMetaprogramming::CTupleHasType<TupleTypes, T>;
+
+        if constexpr (is_component_iterator) {
+
+        } else if constexpr (is_entity_iterator) {
+            using ComponentType = decltype(getCompositionOf<Components, T>());
+            using ComponentTypeSov = decltype(EcsMetaprogramming::makeSovFromTuple(ComponentType{}));
+            return std::get<ComponentTypeSov>(data).end();
+        } else {
+            throw std::runtime_error("cannot iterate over this type");
+        }
+    }
+
+    template <typename T>
+    struct EntityIterator {
         using ComposedType = decltype(getCompositionOf<Components, T>());
         Sov<ComposedType>& data;
         EntityIterator(Sov<ComposedType>& d)
@@ -256,9 +277,8 @@ public:
         }
     };
 
-    template<typename T>
-    struct ComponentIterator
-    {
+    template <typename T>
+    struct ComponentIterator {
         Ecs2& ecs;
         friend Ecs2;
     };

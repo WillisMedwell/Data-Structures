@@ -1,0 +1,14 @@
+{
+    "name": "datastructures",
+    "version": "1.0.0",
+    "dependencies": [
+        {
+            "name": "gtest",
+            "features": []
+        },
+        {
+            "name": "benchmark",
+            "features": []
+        }
+    ]
+}

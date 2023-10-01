@@ -13,44 +13,6 @@ auto demoSov() -> void;
 
 #include <vector>
 
-struct Person
-{
-    std::string name;
-};
-
-struct Moving
-{
-    std::pair<float, float> position;
-    std::pair<float, float> velocity;
-};
-
-struct MovingPerson
-{
-    std::string name;
-    std::pair<float, float> position;
-    std::pair<float, float> velocity;
-};
-
-// Dummy type trait to check if a type exists within the struct
-template <typename StructType, typename T>
-struct ContainsType {
-    template <typename U>
-    static auto test(U*) -> std::true_type;
-
-    template <typename>
-    static auto test(...) -> std::false_type;
-
-    using type = decltype(test<StructType>(nullptr));
-};
-
-// Sample struct
-struct MyStruct {
-    int member1;
-    double member2;
-    char member3;
-};
-
-
 int main()
 {
     demoSov();
@@ -73,13 +35,28 @@ int main()
     ecs2.begin<Player>();
     //ecs2.begin<int>(); // this will fail.
 
+    //auto a = std::views::all(, ecs2.end<Player>()});
+    using IteratorType = decltype(ecs2.begin<Player>());
+    //auto r = std::ranges::subrange<IteratorType, IteratorType>{ecs2.begin<Player>(), ecs2.end<Player>()};
+
+
+    //for(const auto [des, kin] : std::ranges::subrange{)
+    //{
+    //    std::cout << des.name << " " << des.info << '\n';
+    //}
+
+    //auto r = std::ranges::to<
+
+    
+
+    for(auto i = ecs2.begin<Player>(); i != ecs2.end<Player>(); ++i)
+    {
+        const auto [description, kinematics] = *i;
+        std::cout << description.name << " " << description.info << '\n';
+    }
 
     return 0;
 }
-
-
-
-
 
 auto demoSov() -> void
 {
