@@ -35,7 +35,7 @@ jobs:
       run: |
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
         ./vcpkg/vcpkg integrate install
-        cmake --build build
+        cmake --build build --target Benchmark
 
   
     - name: Run Benchmarks
