@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <format>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -329,10 +328,7 @@ public:
 	auto at(int index) -> FieldsRef
 	{
 		if (index >= entry_count || index < 0) {
-			throw std::out_of_range{
-				std::format("Sov::at({}) is out of range, as Sov::size() == {}",
-					index, size())
-			};
+			throw std::out_of_range{"Sov::at({}) is out of range, as Sov::size() == {}"};
 		}
 		return getElement(beginnings, index, std::tuple<>());
 	}

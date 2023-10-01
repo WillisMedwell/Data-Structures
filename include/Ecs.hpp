@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Sov.hpp>
+#include <array>
 
 namespace EcsMetaprogramming {
 // Helper function to create an instance of MyVariadicClass from a tuple
@@ -225,8 +226,11 @@ public:
         std::string storage_layout = "std::tuple {\n";
 
         auto addLayout = [&](auto& sov) {
-            storage_layout += std::format("\t{} \n", typeid(decltype(sov)).name());
+            storage_layout += std::string { "\t" }
+                + std::string { typeid(decltype(sov)).name() }
+                + std::string { "\n" };
         };
+
         forEachSov(data, addLayout);
         storage_layout += "};";
 
@@ -243,7 +247,7 @@ public:
 
         } else if constexpr (is_entity_iterator) {
             using ComponentType = decltype(getCompositionOf<Components, T>());
-            using ComponentTypeSov = decltype(EcsMetaprogramming::makeSovFromTuple(ComponentType{}));
+            using ComponentTypeSov = decltype(EcsMetaprogramming::makeSovFromTuple(ComponentType {}));
             return std::get<ComponentTypeSov>(data).begin();
         } else {
             throw std::runtime_error("cannot iterate over this type");
@@ -260,7 +264,7 @@ public:
 
         } else if constexpr (is_entity_iterator) {
             using ComponentType = decltype(getCompositionOf<Components, T>());
-            using ComponentTypeSov = decltype(EcsMetaprogramming::makeSovFromTuple(ComponentType{}));
+            using ComponentTypeSov = decltype(EcsMetaprogramming::makeSovFromTuple(ComponentType {}));
             return std::get<ComponentTypeSov>(data).end();
         } else {
             throw std::runtime_error("cannot iterate over this type");
