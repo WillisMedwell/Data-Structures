@@ -130,7 +130,6 @@ BENCHMARK(BM_SovPush5Int);
 static void BM_VecPush1String(benchmark::State& state)
 {
     std::string a { "hello world" };
-
     for (auto _ : state) {
         std::vector<std::string> vec;
         for (int i = 0; i < 100; i++) {

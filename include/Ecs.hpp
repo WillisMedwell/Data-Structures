@@ -138,16 +138,20 @@ concept CHasComponent
     = (CHasKinematics<T> && std::is_same_v<C, Component::Kinematics>)
     || (CHasDescription<T> && std::is_same_v<C, Component::Description>);
 
+template <typename... Ts, typename T>
+constexpr auto append_to_tuple(const std::tuple<Ts...>&, T) {
+    return std::tuple<Ts..., T>{};
+}
+
 template <typename Components, typename T, size_t Index = 0, typename Tuple = std::tuple<>>
 consteval auto getCompositionOf()
 {
     if constexpr (Index == std::tuple_size_v<Components>) {
-        return Tuple {};
+        return Tuple{};
     } else {
         using Component = std::tuple_element_t<Index, Components>;
         if constexpr (CHasComponent<T, Component>) {
-            // using NewTuple = decltype(std::tuple_cat<Tuple, std::tuple<Component>());
-            using NewTuple = decltype(std::tuple_cat(Tuple {}, std::make_tuple(Component {})));
+            using NewTuple = decltype(append_to_tuple(Tuple{}, Component{}));
             return getCompositionOf<Components, T, Index + 1, NewTuple>();
         } else {
             return getCompositionOf<Components, T, Index + 1, Tuple>();
