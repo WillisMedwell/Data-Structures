@@ -10,8 +10,7 @@ Sov<Types...> makeSovFromTuple(const std::tuple<Types...>& t)
 {
     return std::apply([](auto&&... args) {
         return Sov<Types...>(std::forward<decltype(args)>(args)...);
-    },
-        t);
+    }, t);
 }
 
 template <typename T, typename Tuple, int Index = 0>
@@ -178,7 +177,7 @@ private:
             using S = std::tuple_element_t<Index, TupleSovComponents>;
             auto& sov = std::get<Index>(tsc);
             if constexpr (S::hasField(ComponentType {})) {
-                for (auto& e : sov.field<ComponentType>()) {
+                for (auto& e : sov.template field<ComponentType>()) {
                     predicate(e);
                 }
             }

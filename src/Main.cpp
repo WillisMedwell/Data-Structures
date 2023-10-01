@@ -48,11 +48,11 @@ int main()
 
     
 
-    for(auto i = ecs2.begin<Player>(); i != ecs2.end<Player>(); ++i)
+ /*   for(auto i = ecs2.begin<Player>(); i != ecs2.end<Player>(); ++i)
     {
         const auto [description, kinematics] = *i;
         std::cout << description.name << " " << description.info << '\n';
-    }
+    }*/
 
     return 0;
 }
