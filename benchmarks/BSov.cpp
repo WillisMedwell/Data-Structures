@@ -4,8 +4,6 @@
 
 #include <vector>
 
-
-
 static void BM_Vec4IndexLoop(benchmark::State& state)
 {
     std::vector<int> v1;
