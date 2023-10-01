@@ -19,11 +19,9 @@ jobs:
 
     - name: Setup vcpkg
       run: |
-        git clone https://github.com/microsoft/vcpkg
+        git clone https://github.com/microsoft/vcpkg.git
         ./vcpkg/bootstrap-vcpkg.sh
-        ./vcpkg/vcpkg install benchmark
-        ./vcpkg/vcpkg install gtest
-
+        ./vcpkg/vcpkg integrate install
 
     - name: Install dependencies
       run: sudo apt-get install -y g++-13
@@ -36,6 +34,7 @@ jobs:
     - name: Build for Tests
       run: |
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -fsanitize=address -fsanitize-recover=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+        ./vcpkg/vcpkg integrate install
         cmake --build build
 
     - name: Run Tests
