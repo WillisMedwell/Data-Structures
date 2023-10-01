@@ -4,6 +4,11 @@ project(DataStructures)
 set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_CXX_STANDARD 20)
 
+# Just annoying.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-template-keyword")
+endif()
+
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c" "src/*.cxx")
 file(GLOB         HEADERS "include/*.hpp" "include/*.h")
 
@@ -16,6 +21,8 @@ target_include_directories(
 
 # Make the start-up project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
+
+
 
 # Google Benchmark setup
 find_package(benchmark CONFIG REQUIRED)

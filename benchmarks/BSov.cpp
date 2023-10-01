@@ -19,7 +19,7 @@ static void BM_Vec4IndexLoop(benchmark::State& state)
     }
     for (auto _ : state) {
         size_t sum = 0;
-        for (int i = 0; i < v1.size(); i++) {
+        for (size_t i = 0; i < v1.size(); i++) {
             sum += v1[i] + v2[i] + v3[i] + v4[i];
         }
         benchmark::DoNotOptimize(v1);
@@ -56,7 +56,7 @@ static void BM_Sov4IndexLoop(benchmark::State& state)
     }
     for (auto _ : state) {
         size_t sum = 0;
-        for (int i = 0; i < sov.size(); i++) {
+        for (size_t i = 0; i < sov.size(); i++) {
             auto [a, b, c, d] = sov[i];
             sum += a + b + c + d;
         }
@@ -147,7 +147,7 @@ static void BM_SovPush1String(benchmark::State& state)
     for (auto _ : state) {
         Sov<std::string> sov;
         for (int i = 0; i < 100; i++) {
-            sov.pushBack("hello world");
+            sov.pushBack(a);
         }
         benchmark::DoNotOptimize(sov);
     }
