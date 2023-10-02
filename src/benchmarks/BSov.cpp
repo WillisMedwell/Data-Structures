@@ -14,7 +14,7 @@ struct Data {
 };
 }
 
-static void BM_SovAllFieldsIteration(benchmark::State& state)
+static void BM_AllFieldsIteration_Sov(benchmark::State& state)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -35,11 +35,11 @@ static void BM_SovAllFieldsIteration(benchmark::State& state)
         benchmark::DoNotOptimize(sum);
     }
 }
-BENCHMARK(BM_SovAllFieldsIteration)
+BENCHMARK(BM_AllFieldsIteration_Sov)
     ->RangeMultiplier(2)
     ->Range(1 << 6, 1 << 17);
 
-static void BM_VecAllFieldsIteration(benchmark::State& state)
+static void BM_AllFieldsIteration_Vec(benchmark::State& state)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -60,11 +60,11 @@ static void BM_VecAllFieldsIteration(benchmark::State& state)
         benchmark::DoNotOptimize(sum);
     }
 }
-BENCHMARK(BM_VecAllFieldsIteration)
+BENCHMARK(BM_AllFieldsIteration_Vec)
     ->RangeMultiplier(2)
     ->Range(1 << 6, 1 << 17);
 
-static void BM_Sov1FieldIteration(benchmark::State& state)
+static void BM_1FieldIteration_Sov(benchmark::State& state)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -91,11 +91,11 @@ static void BM_Sov1FieldIteration(benchmark::State& state)
         benchmark::DoNotOptimize(sum);
     }
 }
-BENCHMARK(BM_Sov1FieldIteration)
+BENCHMARK(BM_1FieldIteration_Sov)
     ->RangeMultiplier(2)
     ->Range(1 << 6, 1 << 17);
 
-static void BM_Vec1FieldIteration(benchmark::State& state)
+static void BM_1FieldIteration_Vec(benchmark::State& state)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -122,6 +122,6 @@ static void BM_Vec1FieldIteration(benchmark::State& state)
         benchmark::DoNotOptimize(sum);
     }
 }
-BENCHMARK(BM_Vec1FieldIteration)
+BENCHMARK(BM_1FieldIteration_Vec)
     ->RangeMultiplier(2)
     ->Range(1 << 6, 1 << 17);
