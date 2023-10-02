@@ -41,19 +41,20 @@ jobs:
     - name: Run Tests
       run: ./build/Benchmark --benchmark_format=console --benchmark_out=benchmark_results.json --benchmark_out_format=json
 
-    - name: Upload Benchmark Results
+    - name: Upload Benchmark Results as Artifact
       uses: actions/upload-artifact@v2
       with:
         name: benchmark-results
-        path: benchmark_result.json
+        path: benchmark_results.json
 
     - name: Move Benchmark Results to Temp Directory
       run: mv benchmark_results.json /tmp/
 
     - name: Checkout gh-pages branch
-      run: |
-        git fetch
-        git checkout gh-pages || git checkout --orphan gh-pages
+      uses: actions/checkout@v2
+      with:
+        ref: 'gh-pages'
+        persist-credentials: false
 
     - name: Move Benchmark Results Back from Temp Directory
       run: mv /tmp/benchmark_results.json ./
@@ -64,4 +65,4 @@ jobs:
         git config --local user.name "GitHub Action"
         git add benchmark_results.json
         git commit -m "Add benchmark results" || echo "No changes to commit"
-        git push origin gh-pages
+        git push https://${{secrets.GITHUB_TOKEN}}@github.com/${{github.repository}} gh-pages
