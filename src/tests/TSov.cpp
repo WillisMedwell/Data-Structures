@@ -152,8 +152,8 @@ TEST(SovTest, StringElements)
 	std::string c = "cccccccccccccccccccc";
 	std::string d = "dddddddddddddddddddd";
 
-	sov.pushBack("aaaaaaaaaaaaaaaaaaaa");
-	sov.pushBack("bbbbbbbbbbbbbbbbbbbb");
+	sov.pushBack(std::string{"aaaaaaaaaaaaaaaaaaaa"});
+	sov.pushBack(std::string{"bbbbbbbbbbbbbbbbbbbb"});
 	sov.pushBack(c);
 	sov.pushBack(d);
 

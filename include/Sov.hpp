@@ -290,15 +290,15 @@ public:
 		static_assert(i < num_types, "Trying to access inaccessible field");
 		auto b = std::get<i>(beginnings);
 		auto e = b + entry_count;
-		return std::ranges::subrange{ b, e };
+		return std::span{ b, e };
 	}
 
 	template <typename T>
-	auto field()
+	auto field() -> std::span<T>
 	{
 		auto b = std::get<T*>(beginnings);
 		auto e = b + entry_count;
-		return std::ranges::subrange{ b, e };
+		return std::span{ b, e };
 	}
 
 	template <typename Field>

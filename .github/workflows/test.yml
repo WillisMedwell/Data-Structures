@@ -14,28 +14,29 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
-    - name: Setup CMake
-      uses: jwlawson/actions-setup-cmake@v1.9
+    - name: Install Basic Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake
+        sudo apt-get install -y clang
 
-    - name: Setup vcpkg
+    - name: Install vcpkg
       run: |
         git clone https://github.com/microsoft/vcpkg.git
         ./vcpkg/bootstrap-vcpkg.sh
         ./vcpkg/vcpkg integrate install
 
-    - name: Install dependencies
-      run: sudo apt-get install -y clang-13
-
     - name: Set up environment
       run: |
-        echo "CC=clang-13" >> $GITHUB_ENV
-        echo "CXX=clang++-13" >> $GITHUB_ENV
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
+        echo "CMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
 
     - name: Build for Benchmarking
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3" -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3"
         ./vcpkg/vcpkg integrate install
         cmake --build build --target Test
 
     - name: Run Tests
-      run: ./build/Test 
+      run: ./build/Test
