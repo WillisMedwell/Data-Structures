@@ -38,7 +38,7 @@ jobs:
         ./vcpkg/vcpkg integrate install
         cmake --build build --target Benchmark
 
-    - name: Run Tests
+    - name: Run Benchmarking
       run: ./build/Benchmark --benchmark_format=console --benchmark_out=benchmark_results.json --benchmark_out_format=json
 
     - name: Upload Benchmark Results as Artifact
@@ -50,11 +50,13 @@ jobs:
     - name: Move Benchmark Results to Temp Directory
       run: mv benchmark_results.json /tmp/
 
-    - name: Checkout gh-pages branch
+    - name: Checkout default branch
       uses: actions/checkout@v2
-      with:
-        ref: 'gh-pages'
-        persist-credentials: false
+
+    - name: Create or Checkout gh-pages branch
+      run: |
+        git fetch
+        git checkout gh-pages || (git checkout --orphan gh-pages && git rm -rf .)
 
     - name: Move Benchmark Results Back from Temp Directory
       run: mv /tmp/benchmark_results.json ./
