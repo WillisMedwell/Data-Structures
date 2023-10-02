@@ -36,7 +36,7 @@ static void BM_AllFieldsIteration_Sov(benchmark::State& state)
     }
 }
 BENCHMARK(BM_AllFieldsIteration_Sov)
-    ->RangeMultiplier(1.5)
+    ->RangeMultiplier(2)
     ->Range(1, 4096);
 
 static void BM_AllFieldsIteration_Vec(benchmark::State& state)
@@ -61,7 +61,7 @@ static void BM_AllFieldsIteration_Vec(benchmark::State& state)
     }
 }
 BENCHMARK(BM_AllFieldsIteration_Vec)
-    ->RangeMultiplier(1.5)
+    ->RangeMultiplier(2)
     ->Range(1, 4096);
 
 static void BM_1FieldIteration_Sov(benchmark::State& state)
@@ -92,7 +92,7 @@ static void BM_1FieldIteration_Sov(benchmark::State& state)
     }
 }
 BENCHMARK(BM_1FieldIteration_Sov)
-    ->RangeMultiplier(1.5)
+    ->RangeMultiplier(2)
     ->Range(1, 4096);
 
 static void BM_1FieldIteration_Vec(benchmark::State& state)
@@ -123,5 +123,5 @@ static void BM_1FieldIteration_Vec(benchmark::State& state)
     }
 }
 BENCHMARK(BM_1FieldIteration_Vec)
-    ->RangeMultiplier(1.5)
+    ->RangeMultiplier(2)
     ->Range(1, 4096);
