@@ -12,7 +12,14 @@ async function fetchAndDisplayBenchmarkData() {
         let graphs = new Map();
 
         for (let i = 0; i < labels.length; i++) {
-            let time_point = { title: labels[i].split('_')[1].split('/')[0], iteration: parseInt(labels[i].split('/')[1], 10), time: parseFloat(cpuTimeData[i], 10) };
+
+            let time_point;
+            try {
+                time_point = { title: labels[i].split('_')[2].split('/')[0], iteration: parseInt(labels[i].split('/')[1], 10), time: parseFloat(cpuTimeData[i], 10) };
+            }
+            catch {
+                time_point = { title: labels[i].split('_')[1].split('/')[0], iteration: parseInt(labels[i].split('/')[1], 10), time: parseFloat(cpuTimeData[i], 10) };
+            }
 
             let graph_key = labels[i].split('_')[1].split('/')[0];
             if (graphs.has(graph_key)) {
@@ -28,38 +35,88 @@ async function fetchAndDisplayBenchmarkData() {
 
         const table = document.getElementById("graphTable");
         for (const [graph_title, graph_data] of graphs.entries()) {
-            const newRow = table.insertRow(-1);
-            const newCell = newRow.insertCell(0);
             const canvas = document.createElement('canvas');
             canvas.width = container.offsetWidth;
             canvas.height = container.offsetHeight;
             canvas.className = "benchmarkChart";
-            newCell.appendChild(canvas);
+            // const resetZoomButton = document.createElement('button');
+            // resetZoomButton.innerText = "Rest Zoom";
+            // const enableLogButton = document.createElement('checkbox');
+            // //enableLogButton.innerText = "Enable Log Scaling";
+
+            table.insertRow(-1).insertCell(0).appendChild(canvas);
+
+            //let row = table.insertRow(-1);
+            //row.insertCell(0).appendChild(resetZoomButton).appendChild(enableLogButton);
 
             console.log(graph_data);
-            
+
+            const groupedData = graph_data.reduce((acc, obj) => {
+                if (!acc[obj.title]) {
+                    acc[obj.title] = {
+                        iterations: [],
+                        times: []
+                    };
+                }
+                acc[obj.title].iterations.push(obj.iteration);
+                acc[obj.title].times.push(obj.time);
+                return acc;
+            }, {});
+
+            // Prepare datasets for the chart
+            const datasets = Object.keys(groupedData).map((title, index) => {
+                const colors = ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)']; // Add more colors if needed
+                return {
+                    label: title,
+                    data: groupedData[title].times,
+                    borderColor: colors[index % colors.length],
+                    fill: false
+                };
+            });
+
             // Draw something on the canvas (optional)
             const ctx = canvas.getContext('2d');
             const chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: graph_data.map(obj => obj.iteration),
-                    datasets: [
-                        {
-                            label: 'CPU Time (ns)',
-                            data: graph_data.map(obj => obj.time),
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1
-                        }
-                    ]
+                    labels: groupedData['Sov'].iterations, // Assumes all datasets have the same iterations
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,  
+                    maintainAspectRatio: false,
                     scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Iterations'
+                            }
+                        },
                         y: {
-                            beginAtZero: true
+                            //type: 'logarithmic', // Make y-axis logarithmic
+                            title: {
+                                display: true,
+                                text: 'Time (ns)'
+                            },
+                            ticks: {
+                                // Include a dollar sign in the ticks
+                                callback: function (value, index, values) {
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: graph_title,
+                            position: 'top',
+                            font: {
+                                size: 30 // Font size in pixels
+                            }
+                        },
+                        legend: {
+                            position: 'right'
                         }
                     }
                 }
@@ -72,16 +129,16 @@ async function fetchAndDisplayBenchmarkData() {
 
 window.addEventListener('load', function () {
     fetchAndDisplayBenchmarkData();
-    const divElement = document.getElementById('halfSize');
-    divElement.style.width = window.innerWidth / 2 + 'px';
+    //const divElement = document.getElementById('halfSize');
+    //divElement.style.width = window.innerWidth / 2 + 'px';
 });
 
-window.addEventListener('resize', function () {
-    const container = document.getElementById('halfSize');
-    container.style.width = window.innerWidth / 2 + 'px';
-    Array(document.getElementsByClassName("benchmarkChart")).forEach(canvas => {
-        canvas.width = container.offsetWidth;
-        canvas.height = container.offsetHeight;
-    });
-});
+// window.addEventListener('resize', function () {
+//     const container = document.getElementById('halfSize');
+//     container.style.width = window.innerWidth / 2 + 'px';
+//     Array(document.getElementsByClassName("benchmarkChart")).forEach(canvas => {
+//         canvas.width = container.offsetWidth;
+//         canvas.height = container.offsetHeight;
+//     });
+// });
 
