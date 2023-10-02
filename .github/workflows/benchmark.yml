@@ -47,13 +47,16 @@ jobs:
         name: benchmark-results
         path: benchmark_result.json
 
+    - name: Move Benchmark Results to Temp Directory
+      run: mv benchmark_results.json /tmp/
+
     - name: Checkout gh-pages branch
       run: |
         git fetch
         git checkout gh-pages || git checkout --orphan gh-pages
 
-    - name: Copy Benchmark Results to gh-pages
-      run: cp benchmark_results.json ./ 
+    - name: Move Benchmark Results Back from Temp Directory
+      run: mv /tmp/benchmark_results.json ./
 
     - name: Commit and Push to gh-pages
       run: |
