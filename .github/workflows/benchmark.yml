@@ -39,4 +39,10 @@ jobs:
         cmake --build build --target Benchmark
 
     - name: Run Tests
-      run: ./build/Benchmark
+      run: ./build/Benchmark --benchmark_format=console --benchmark_out=benchmark_results.json --benchmark_out_format=json
+
+    - name: Upload Benchmark Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: benchmark-results
+        path: benchmark_results.json
