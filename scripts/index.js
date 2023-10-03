@@ -65,7 +65,7 @@ async function fetchAndDisplayBenchmarkData() {
             
             // Prepare datasets for the chart
             const datasets = Object.keys(groupedData).map((title, index) => {
-                const colors = ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)']; // Add more colors if needed
+                const colors = ['rgba(54, 162, 235, 0.5)', 'rgba(255, 99, 132, 0.5)', 'rgba(132, 99, 255, 0.5)']; // Add more colors if needed
                 return {
                     label: title,
                     data: groupedData[title].times,
