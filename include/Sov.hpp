@@ -31,8 +31,8 @@ private:
 	// std::unique_ptr<uint8_t[], std::default_delete<uint8_t[]>> data;
 	size_t entry_capacity = 0;
 	size_t entry_count = 0;
-	uint8_t* data;
 	FieldsPtr beginnings;
+	uint8_t* data;
 
 private: // tuple iteration helpers
 	template <size_t index = 0, typename Tuple, typename T, class Pred>
@@ -165,8 +165,8 @@ public:
 	constexpr Sov(size_t init_capacity = 20)
 		: entry_capacity(init_capacity)
 		, entry_count(0)
-		, data(new uint8_t[bytes_per_entry * init_capacity + 64])
 		, beginnings({})
+		, data(new uint8_t[bytes_per_entry * init_capacity + 64])
 	{
 		static_assert(std::conjunction_v<std::is_default_constructible<Types>...>,
 			"All types must be default-constructible");
@@ -235,16 +235,7 @@ public:
 		++entry_count;
 	}
 
-	void pushBack(const FieldsValue& value)
-	{
-		if (entry_count == entry_capacity) {
-			grow(entry_capacity * 2);
-		}
-		emplaceTuple(beginnings, FieldsConstRef(value), entry_count);
-		++entry_count;
-	}
-
-	auto popBack() -> void
+	inline auto popBack() -> void
 	{
 		if (entry_count != 0) {
 			--entry_count;
@@ -285,34 +276,33 @@ public:
 	}
 
 	template <size_t i>
-	auto field()
+	[[nodiscard]] inline auto field()
 	{
 		static_assert(i < num_types, "Trying to access inaccessible field");
-		auto b = std::get<i>(beginnings);
-		auto e = b + entry_count;
-		return std::span{ b, e };
+		return std::span{ std::get<i>(beginnings), entry_count };
 	}
 
 	template <typename T>
-	auto field() -> std::span<T>
+	[[nodiscard]] inline auto fieldData() -> T*
 	{
-		auto b = std::get<T*>(beginnings);
-		auto e = b + entry_count;
-		return std::span{ b, e };
+		return std::get<T*>(beginnings);
+	}
+
+	template <typename T>
+	[[nodiscard]] inline auto field() -> std::span<T>
+	{
+		return std::span{ std::get<T*>(beginnings), entry_count };
 	}
 
 	template <typename Field>
-	auto field() const -> const std::span<const Field>
+	[[nodiscard]] inline auto field() const -> const std::span<const Field>
 	{
-		auto b = std::get<Field*>(beginnings);
-		auto e = b + entry_count;
-		return { b, e };
+		return { std::get<Field*>(beginnings), entry_count };
 	}
 
 	template <typename Field>
-	consteval static bool hasField(Field field)
+	consteval static bool hasField(Field field = {})
 	{
-
 		auto containsField = [&](bool has_field, auto t) -> bool {
 			return (has_field || std::is_same_v<decltype(t), Field>);
 			};
@@ -320,15 +310,15 @@ public:
 		return result;
 	}
 
-	auto operator[](int index) -> FieldsRef
+	[[nodiscard]] inline auto operator[](size_t index) -> FieldsRef
 	{
 		return getElement(beginnings, index, std::tuple<>());
 	}
 
-	auto at(int index) -> FieldsRef
+	[[nodiscard]] inline auto at(int index) -> FieldsRef
 	{
 		if (index >= entry_count || index < 0) {
-			throw std::out_of_range{"Sov::at({}) is out of range, as Sov::size() == {}"};
+			throw std::out_of_range{"Sov::at() is out of range"};
 		}
 		return getElement(beginnings, index, std::tuple<>());
 	}
@@ -344,49 +334,29 @@ public:
 			, index(i)
 		{
 		}
-		auto operator++() noexcept -> Iterator&
+		inline auto operator++() noexcept -> Iterator&
 		{
 			++index;
 			return *this;
 		}
-		auto operator++(int) noexcept -> Iterator
+		inline auto operator++(int) noexcept -> Iterator
 		{
 			auto cpy = *this;
 			++cpy;
 			return cpy;
 		}
-		auto operator==(const Iterator& other) const noexcept -> bool
+		[[nodiscard]] inline auto operator==(const Iterator& other) const noexcept -> bool
 		{
 			return this->index == other.index;
 		}
-		auto operator!=(const Iterator& other) const noexcept -> bool
+		[[nodiscard]] inline auto operator!=(const Iterator& other) const noexcept -> bool
 		{
-			return !(*this == other);
+			return this->index != other.index;
 		}
-		auto operator*() noexcept { return sov[static_cast<int>(index)]; }
+		[[nodiscard]] inline auto operator*() noexcept { return sov[index]; }
 	};
-	auto begin() noexcept -> Iterator { return Iterator(*this, 0); }
-	auto end() noexcept -> Iterator { return Iterator(*this, entry_count); }
-	auto size() const noexcept -> size_t { return entry_count; }
+	[[nodiscard]] inline auto begin() noexcept -> Iterator { return Iterator(*this, 0); }
+	[[nodiscard]] inline auto end() noexcept -> Iterator { return Iterator(*this, entry_count); }
+	[[nodiscard]] inline auto size() const noexcept -> size_t { return entry_count; }
 };
 
-// template <class Sov, typename Field>
-// concept CSovHasField = requires(Sov sov, Field field) {
-//     { Sov::hasField(Field{}) } -> std::same_as<bool>;
-//     requires sov.hasField(field) == true;
-// };
-
-// template<typename Sov, typename Field>
-// struct SovHasField
-//{
-// private:
-//    consteval static bool hasField()
-//    {
-//        Sov sov;
-//        Field field;
-//        return sov.hasField(field);
-//    }
-//
-// public:
-//     constexpr static bool value = hasField();
-// };

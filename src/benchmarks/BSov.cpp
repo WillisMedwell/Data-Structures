@@ -48,7 +48,7 @@ static void BM_AllFieldsIteration_Sov(benchmark::State& state)
     for (auto _ : state) {
 
         for (auto [a, b, c] : sov) {
-            sum += static_cast<size_t>(a + b.data[0] + c.pos.x + c.vel.y);
+            sum += static_cast<size_t>(a + b.data[uint8_dist(gen)] + c.pos.x + c.vel.y);
         }
         benchmark::DoNotOptimize(sov);
         benchmark::DoNotOptimize(sum);
@@ -80,7 +80,7 @@ static void BM_AllFieldsIteration_Vec(benchmark::State& state)
     for (auto _ : state) {
 
         for (auto& data : vec) {
-            sum += static_cast<size_t>(data.id + data.name.data[0] + data.kinematic.pos.x + data.kinematic.vel.y);
+            sum += static_cast<size_t>(data.id + data.name.data[uint8_dist(gen)] + data.kinematic.pos.x + data.kinematic.vel.y);
         }
         benchmark::DoNotOptimize(vec);
         benchmark::DoNotOptimize(sum);
