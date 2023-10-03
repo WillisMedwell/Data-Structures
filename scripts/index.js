@@ -15,13 +15,13 @@ async function fetchAndDisplayBenchmarkData() {
 
             let time_point;
             try {
-                time_point = { title: labels[i].split('_')[2].split('/')[0], iteration: parseInt(labels[i].split('/')[1], 10), time: parseFloat(cpuTimeData[i], 10) };
+                time_point = { title: labels[i].split(':')[1].split('/')[0], iteration: parseInt(labels[i].split('/')[1], 10), time: parseFloat(cpuTimeData[i], 10) };
             }
             catch {
-                time_point = { title: labels[i].split('_')[1].split('/')[0], iteration: parseInt(labels[i].split('/')[1], 10), time: parseFloat(cpuTimeData[i], 10) };
+                time_point = { title: labels[i].split(':')[1].split('/')[0], iteration: parseInt(labels[i].split('/')[1], 10), time: parseFloat(cpuTimeData[i], 10) };
             }
 
-            let graph_key = labels[i].split('_')[1].split('/')[0];
+            let graph_key = labels[i].split(':')[0];
             if (graphs.has(graph_key)) {
                 graphs.get(graph_key).push(time_point);
             } else {
@@ -62,10 +62,10 @@ async function fetchAndDisplayBenchmarkData() {
                 acc[obj.title].times.push(obj.time);
                 return acc;
             }, {});
-
+            
             // Prepare datasets for the chart
             const datasets = Object.keys(groupedData).map((title, index) => {
-                const colors = ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)']; // Add more colors if needed
+                const colors = ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)']; // Add more colors if needed
                 return {
                     label: title,
                     data: groupedData[title].times,
@@ -93,7 +93,7 @@ async function fetchAndDisplayBenchmarkData() {
                             }
                         },
                         y: {
-                            //type: 'logarithmic', // Make y-axis logarithmic
+                            type: 'logarithmic', // Make y-axis logarithmic
                             title: {
                                 display: true,
                                 text: 'Time (ns)'
