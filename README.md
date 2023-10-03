@@ -6,7 +6,7 @@ All are header implementations.
 Like a structure of arrays but with reallocation like std::vector. All memory is in one block making it very cache friendly. Heavy use of compile time hackery...
 Requires C++20.
 
-A Live comparison between an *object orientated* **std::vector** and *data orientated* **Sov** [here]("https://willismedwell.github.io/Data-Structures/").
+A Live comparison between an *object orientated* **std::vector** and *data orientated* **Sov** [here](https://willismedwell.github.io/Data-Structures/).
 
 ```cpp
 Sov<uint8_t, std::string, uint16_t> sov;
