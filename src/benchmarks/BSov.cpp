@@ -154,3 +154,33 @@ BENCHMARK(BM_1FieldIteration_Vec)
     ->Name("Use 16 bytes of 280 bytes:Vec")
     ->RangeMultiplier(2)
     ->Range(32, 1 << 17);
+
+static void BM_1FieldIteration2_Vec(benchmark::State& state)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint64_t> uint64_dist(0, 100000);
+    std::uniform_int_distribution<int> uint8_dist(0, 255);
+    std::uniform_real_distribution<float> float_dist(-20.0f, 20.0f);
+    
+    int N = state.range(0);
+    std::vector<TSov::Kinematic> vec;
+    for (int i = 0; i < N; i++) {
+        vec.push_back({
+            float_dist(gen), float_dist(gen), float_dist(gen), float_dist(gen)}
+        );
+    }
+    size_t sum = 0;
+    for (auto _ : state) {
+
+        for (auto& data : vec) {
+            sum += static_cast<size_t>(data.pos.x * data.vel.x + data.pos.y * data.vel.y);
+        }
+        benchmark::DoNotOptimize(vec);
+        benchmark::DoNotOptimize(sum);
+    }
+}
+BENCHMARK(BM_1FieldIteration2_Vec)
+    ->Name("Use 16 bytes of 280 bytes:Lowest Possible")
+    ->RangeMultiplier(2)
+    ->Range(32, 1 << 17);
