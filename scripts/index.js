@@ -4,6 +4,26 @@ async function fetchAndDisplayBenchmarkData() {
         const response = await fetch('benchmark_results.json');
         const benchmarkData = await response.json();
 
+
+        const cacheInfoElement = document.getElementById('cache_info');
+
+        benchmarkData.context.caches.forEach(cache => {
+            let sizeInKB = cache.size / 1024;
+            let sizeString;
+          
+            if (sizeInKB > 1000) {
+              const sizeInMB = sizeInKB / 1024;
+              sizeString = `${sizeInMB.toFixed(1)} MB`;
+            } else {
+              sizeString = `${sizeInKB.toFixed(1)} KB`;
+            }
+          
+            const cacheInfoString = `L${cache.level} ${cache.type} = ${sizeString}`;
+            const cacheInfoHtmlElement = document.createElement('p');
+            cacheInfoHtmlElement.textContent = cacheInfoString;
+            cacheInfoElement.appendChild(cacheInfoHtmlElement);
+          });
+
         const labels = benchmarkData.benchmarks.map(benchmark => benchmark.name);
         const cpuTimeData = benchmarkData.benchmarks.map(benchmark => benchmark.cpu_time.toFixed(2));
 
@@ -39,15 +59,10 @@ async function fetchAndDisplayBenchmarkData() {
             canvas.width = container.offsetWidth;
             canvas.height = container.offsetHeight;
             canvas.className = "benchmarkChart";
-            // const resetZoomButton = document.createElement('button');
-            // resetZoomButton.innerText = "Rest Zoom";
-            // const enableLogButton = document.createElement('checkbox');
-            // //enableLogButton.innerText = "Enable Log Scaling";
+
 
             table.insertRow(-1).insertCell(0).appendChild(canvas);
 
-            //let row = table.insertRow(-1);
-            //row.insertCell(0).appendChild(resetZoomButton).appendChild(enableLogButton);
 
             console.log(graph_data);
 
