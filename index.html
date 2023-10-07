@@ -8,7 +8,21 @@
 </head>
 
 <body>
+
+
     <div id="halfSize" style="height: 600px; width: 50vw; align-items: center; margin: auto;">
+        <p><strong>Analysis:</strong> 
+            <ul>
+                <li>The SOV is ~35% faster when the data is larger than the L2 cache and this performance improvement grows exponentially.</li>
+                <li>std::vector is generally faster at lower sizes (due to the overhead of my unoptimised implementation).</li>
+            </ul>
+            <strong>Conclusion:</strong>
+            <ul>
+                <li>Some gains can be made with an SOA, particularly when your data fields have interdependencies. <i>(Potential vetorisation opportunities too)</i></li>
+                <li>However for data under 100KB, the SOA/SOV approach doesn't yield notable speed gains.</li>
+            </ul>
+        </p>
+
         <p id = "cache_info"></p>
 
         <table id="graphTable">
