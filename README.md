@@ -1,12 +1,16 @@
 ![Test Badge](https://github.com/WillisMedwell/wm/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/wm/actions/workflows/benchmark.yml/badge.svg)
+
+- [wm](#wm)
+    - [Sov (Structure of Vectors)](#sov-structure-of-vectors)
+    - [Functors](#functors)
+    - [SplitByElement](#splitbyelement)
+- [Installation](#installation)
+    - [Manual](#manual)
+    - [CMake](#cmake)
+
 # wm
 Header only libraries for everyday C++ use.  
-*Jump to [installation](#Installation).*
-
-## Index
-1. Sov
-2. Functors
-3. SplitByElement
+*Jump to [installation](#installation).*
 
 
 ### Sov (Structure of Vectors)
