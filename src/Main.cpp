@@ -1,5 +1,5 @@
-#include "Sov.hpp"
-#include "Ecs.hpp"
+#include "wm/Sov.hpp"
+#include "wm/Ecs.hpp"
 
 #include <iostream>
 #include <numeric>
@@ -9,6 +9,8 @@
 
 
 auto demoSov() -> void;
+
+using namespace wm;
 
 #include <vector>
 

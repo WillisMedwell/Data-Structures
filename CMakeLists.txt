@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.7.2)
-project(DataStructures)
+cmake_minimum_required(VERSION 3.11)
+project(wm)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_CXX_STANDARD 20)

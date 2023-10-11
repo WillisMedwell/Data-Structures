@@ -1,7 +1,9 @@
-#include "Splitters.hpp"
+#include "wm/Splitters.hpp"
 
 #include <gtest/gtest.h>
 #include <vector>
+
+using namespace wm;
 
 TEST(SplitByElementTest, Basic)
 {

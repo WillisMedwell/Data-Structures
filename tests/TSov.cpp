@@ -1,6 +1,8 @@
-#include "Sov.hpp"
+#include "wm/Sov.hpp"
 
 #include <gtest/gtest.h>
+
+using namespace wm;
 
 namespace TSov {
 thread_local size_t element_constructions = 0;

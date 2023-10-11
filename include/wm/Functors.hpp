@@ -1,5 +1,7 @@
 #pragma once
 
+namespace wm {
+
 template <typename T>
 struct IsEqualTo {
     const T value;
@@ -59,3 +61,4 @@ struct IsGreaterThan {
         return other > value;
     }
 };
+}

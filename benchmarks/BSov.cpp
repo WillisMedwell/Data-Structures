@@ -1,11 +1,12 @@
 #include <benchmark/benchmark.h>
 
-#include "Sov.hpp"
+#include "wm/Sov.hpp"
 
 #include <array>
 #include <random>
 #include <vector>
 
+using namespace wm;
 
 namespace TSov {
 struct Vec2 {

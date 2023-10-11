@@ -7,7 +7,9 @@
 #include <tuple>
 #include <vector>
 
-#include "Functors.hpp"
+#include "wm/Functors.hpp"
+
+namespace wm {
 
 template <std::ranges::contiguous_range Container, typename Element>
 class SplitByElement {
@@ -94,3 +96,5 @@ public:
 		return index_lookup[i];
 	}
 };
+
+}
