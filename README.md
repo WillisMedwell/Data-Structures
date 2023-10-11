@@ -1,6 +1,6 @@
 ![Test Badge](https://github.com/WillisMedwell/Data-Structures/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/Data-Structures/actions/workflows/benchmark.yml/badge.svg)
 # Useful Data Structures.
-All are header implementations.
+Header only libraries for convenience. [Download from Releases here.](https://github.com/WillisMedwell/Data-Structures/releases/tag/Headers)
 
 ## Sov (Structure of Vectors)
 Like a structure of arrays but with reallocation like std::vector. All memory is in one block making it very cache friendly. Heavy use of compile time hackery...
@@ -47,7 +47,7 @@ std::ranges::any_of(range, IsGreaterThan(5));
 std::ranges::all_of(range, IsLessThan(1));
 ```
 
-### SplitByElement
+## SplitByElement
 Takes a contiguous range and returns spans into that range with no copying. 
 - Range based loops = lazily evaluated.
 - Indexing = on first index, are evaluated.
