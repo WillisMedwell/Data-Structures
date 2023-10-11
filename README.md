@@ -1,7 +1,13 @@
 ![Test Badge](https://github.com/WillisMedwell/wm/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/wm/actions/workflows/benchmark.yml/badge.svg)
-# Useful Data Structures.
-Header only libraries for convenience.  
+# wm
+Header only libraries for everyday C++ use.  
 *Jump to [installation](#Installation).*
+
+## Index
+1. Sov
+2. Functors
+3. SplitByElement
+
 
 ### Sov (Structure of Vectors)
 Like a structure of arrays but with reallocation like std::vector. All memory is in one block making it very cache friendly.
@@ -10,7 +16,7 @@ A live comparison between an *object orientated* approach and *data orientated* 
 
 **Usage**
 ```cpp
-Sov<uint8_t, std::string, uint16_t> sov;
+wm::Sov<uint8_t, std::string, uint16_t> sov;
 
 sov.pushBack(0, "first", 1);
 sov.pushBack(0, "second", 2);
@@ -40,10 +46,10 @@ Honestly cannot believe the std doesn't support these. Literally blows my mind.
 ```cpp
 std::vector<int> range = { 1, 2, 3, 4, 5, 6};
 
-std::ranges::find_if(range, IsEqualTo(4));
-std::ranges::find_if(range, IsNotEqualTo(1));
-std::ranges::any_of(range, IsGreaterThan(5));
-std::ranges::all_of(range, IsLessThan(1));
+std::ranges::find_if(range, wm::IsEqualTo(4));
+std::ranges::find_if(range, wm::IsNotEqualTo(1));
+std::ranges::any_of(range, wm::IsGreaterThan(5));
+std::ranges::all_of(range, wm::IsLessThan(1));
 ```
 
 ### SplitByElement
@@ -51,11 +57,13 @@ Takes a contiguous range and returns spans into that range with no copying.
 - Range based loops = lazily evaluated.
 - Indexing = on first index, are evaluated.
 
+*std::views::split & std::views::lazy_split are too temperamental in my opinion.*
+
 **Usage**
 
 ```c++
 std::string_view sentence = " I went for a run yesterday ";
-for(std::span<const char> word_data : SplitByElement{sentence, ' ' })
+for(std::span<const char> word_data : wm::SplitByElement{sentence, ' ' })
 {
     std::string_view word { word_data.begin(), word_data.end() };
     std::cout << word << ',';
@@ -66,7 +74,7 @@ for(std::span<const char> word_data : SplitByElement{sentence, ' ' })
 ```c++
 std::vector<int> nums = { 2, 1, 2, 2, 3, 4, 2 };
 
-num_grouping = SplitByElement{nums, 2};
+num_grouping = wm::SplitByElement{nums, 2};
 
 std::span<int> num_group0 = num_grouping[0];
 // [ 1 ]
