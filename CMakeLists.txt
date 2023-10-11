@@ -12,6 +12,8 @@ elsif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND MSVC)
 endif()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c" "src/*.cxx")
+file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp" "tests/*.c" "test/*.cxx")
+file(GLOB_RECURSE BENCHMARK_SOURCES "benchmarks/*.cpp" "benchmarks/*.c" "benchmarks/*.cxx")
 file(GLOB         HEADERS "include/*.hpp" "include/*.h")
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -28,7 +30,6 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 
 # Google Benchmark setup
 find_package(benchmark CONFIG REQUIRED)
-file(GLOB_RECURSE BENCHMARK_SOURCES "src/benchmarks/*.cpp")
 add_executable(Benchmark ${BENCHMARK_SOURCES})
 target_link_libraries(Benchmark PRIVATE benchmark::benchmark benchmark::benchmark_main)
 target_include_directories(
@@ -39,7 +40,6 @@ target_include_directories(
 
 # GTest setup
 find_package(GTest CONFIG REQUIRED)
-file(GLOB_RECURSE TEST_SOURCES "src/tests/*.cpp")
 add_executable(Test ${TEST_SOURCES})
 target_link_libraries(Test PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
 target_include_directories(

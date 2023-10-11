@@ -221,7 +221,7 @@ public:
         using ComposedType = decltype(getCompositionOf<Components, T>());
 
         ComposedType reconstructed_element = EcsMetaprogramming::construct<T, ComposedType>(element);
-        std::get<i>(data).pushBack(reconstructed_element);
+        // TODO std::get<i>(data).pushBack(reconstructed_element);
     }
 
     auto storageLayout() -> std::string
