@@ -81,7 +81,10 @@ Download the headers from the [Releases](https://github.com/WillisMedwell/wm/rel
 ### CMake 
 You can use the CMake fetching module to do it all for you.
 ```cmake
-# Fetch the ZIP file containing the headers.
+# Cmake's fetch module.
+include(FetchContent)
+
+# Fetch the ZIP file containing the headers. Lets you always have the latest release.
 FetchContent_Declare(
   wm_headers
   URL https://github.com/WillisMedwell/wm/releases/download/Headers/headers.zip
@@ -89,14 +92,14 @@ FetchContent_Declare(
 
 FetchContent_GetProperties(wm_headers)
 FetchContent_Populate(wm_headers)
-set(EXTRA_HEADERS ${wm_headers_SOURCE_DIR}) 
+set(WM_HEADERS_DIR ${wm_headers_SOURCE_DIR}) 
 ```
 ```cmake
 # Add to your include list.
 target_include_directories(${CMAKE_PROJECT_NAME}
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
-        ${EXTRA_HEADERS}
+        ${WM_HEADERS_DIR}
 )
 ```
 Then using it is as simple as...
