@@ -1,12 +1,12 @@
-![Test Badge](https://github.com/WillisMedwell/Data-Structures/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/Data-Structures/actions/workflows/benchmark.yml/badge.svg)
+![Test Badge](https://github.com/WillisMedwell/wm/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/wm/actions/workflows/benchmark.yml/badge.svg)
 # Useful Data Structures.
-Header only libraries for convenience. [Download from Releases here.](https://github.com/WillisMedwell/Data-Structures/releases/tag/Headers)
+Header only libraries for convenience. [Download from Releases here.](https://github.com/WillisMedwell/wm/releases/tag/Headers)
 
 ## Sov (Structure of Vectors)
 Like a structure of arrays but with reallocation like std::vector. All memory is in one block making it very cache friendly. Heavy use of compile time hackery...
 Requires C++20.
 
-A Live comparison between an *object orientated* **std::vector** and *data orientated* **Sov** [here](https://willismedwell.github.io/Data-Structures/).
+A Live comparison between an *object orientated* **std::vector** and *data orientated* **Sov** [here](https://willismedwell.github.io/wm/).
 
 ### Usage
 
