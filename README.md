@@ -1,6 +1,43 @@
 ![Test Badge](https://github.com/WillisMedwell/wm/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/wm/actions/workflows/benchmark.yml/badge.svg)
 # Useful Data Structures.
-Header only libraries for convenience. [Download from Releases here.](https://github.com/WillisMedwell/wm/releases/tag/Headers)
+Header only libraries for convenience. 
+
+## Installation
+### Manual
+Download from [Releases](https://github.com/WillisMedwell/wm/releases/tag/Headers) and put the files in your include directory.
+
+### CMake 
+You can use the CMake fetching module to do it all for you.
+```cmake
+# Fetch the ZIP file containing the headers.
+FetchContent_Declare(
+  wm_headers
+  URL https://github.com/WillisMedwell/wm/releases/download/Headers/headers.zip
+)
+
+FetchContent_GetProperties(wm_headers)
+FetchContent_Populate(wm_headers)
+set(EXTRA_HEADERS ${wm_headers_SOURCE_DIR}) 
+```
+```cmake
+# Add to your include list.
+target_include_directories(${CMAKE_PROJECT_NAME}
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+        ${EXTRA_HEADERS}
+)
+```
+Then using it is as simple as...
+```c++
+#include "wm/Sov.hpp"
+
+int main()
+{
+    wm::Sov<int, int, int> foos; 
+}
+```
+
+
 
 ## Sov (Structure of Vectors)
 Like a structure of arrays but with reallocation like std::vector. All memory is in one block making it very cache friendly. Heavy use of compile time hackery...
