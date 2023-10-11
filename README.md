@@ -1,4 +1,6 @@
 ![Test Badge](https://github.com/WillisMedwell/wm/actions/workflows/test.yml/badge.svg) ![Benchmark Badge](https://github.com/WillisMedwell/wm/actions/workflows/benchmark.yml/badge.svg)
+# wm
+Header only libraries for everyday C++ use.  
 
 - [wm](#wm)
     - [Sov (Structure of Vectors)](#sov-structure-of-vectors)
@@ -7,10 +9,6 @@
 - [Installation](#installation)
     - [Manual](#manual)
     - [CMake](#cmake)
-
-# wm
-Header only libraries for everyday C++ use.  
-*Jump to [installation](#installation).*
 
 
 ### Sov (Structure of Vectors)
