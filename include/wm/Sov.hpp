@@ -218,6 +218,15 @@ public:
         emplaceTuple(beginnings, FieldsConstRef(value...), entry_count);
         ++entry_count;
     }
+    
+    auto pushBack(const FieldsConstRef value) -> void
+    {
+        if (entry_count == entry_capacity) {
+            grow(entry_capacity * 2);
+        }
+        emplaceTuple(beginnings, value, entry_count);
+        ++entry_count;
+    }
 
     auto pushBack(Types&&... value) -> void
     {
